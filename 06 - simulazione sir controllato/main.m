@@ -35,9 +35,11 @@ x = x.*N;
 fig = figure();
 plot(t,x(:,2),'black')
 hold on
-area(t,x(:,2),'FaceColor','b','FaceAlpha',.3,'EdgeAlpha',.3)
+area(t,x(:,2),'FaceColor','r','FaceAlpha',.3,'EdgeAlpha',.3)
+[m,im] = max(x(:,2));
+text(t(im)*0.8,m*0.25,['$\mathcal{R}_0$ = ' num2str(R_0)],'FontSize',15,'color','black')
 
-%% 2.
+%% 2. cambio R_0
 
 R_0 = 1.5;
 beta = R_0*gamma;
@@ -56,7 +58,7 @@ x = x.*N;
 
 hold on
 plot(t,x(:,2),'black','LineStyle','--')
-area(t,x(:,2),'FaceColor','r','FaceAlpha',.3,'EdgeAlpha',.3)
+area(t,x(:,2),'FaceColor','black','FaceAlpha',.3,'EdgeAlpha',.3)
 %title(['beta = ' num2str(beta) ', gamma = ' num2str(gamma)])
 
 % imposto latex come inteprete per i grafici
@@ -65,21 +67,23 @@ set(groot,...
     'defaultAxesTickLabelInterpreter','latex',...
     'defaultLegendInterpreter','latex');
 
-xlabel("Tempo dal primo caso")
-ylabel("Numero di casi")
+xlabel("Tempo dalla prima infezione")
+ylabel("Numero di infetti")
 text()
-grid on
+grid off
 box off
 set(gca,'XTickLabel',{},'YTickLabel',{})
-% set(gca,'YTick',[], 'XTick',[])
+set(gca,'YTick',[], 'XTick',[])
 axis([0 7 0 18000])
 set(gca,'FontSize',12.5);
+[m,im] = max(x(:,2));
+text(t(im)*.85,m*0.3,['$\mathcal{R}_0$ = ' num2str(R_0)],'FontSize',15,'color','black')
 
 exportgraphics(fig,'flatteningthecurve.pdf','ContentType','vector',...
                    'BackgroundColor','none')
 
 
-%% Richiesta Albi
+%% Delay beta
 
 if pplot == 1
 
@@ -111,7 +115,7 @@ if pplot == 1
     fig2 = figure();
     plot(t,x(:,2),'black')
     hold on
-    area(t,x(:,2),'FaceColor','b','FaceAlpha',.3,'EdgeAlpha',.3)
+    area(t,x(:,2),'FaceColor','r','FaceAlpha',.3,'EdgeAlpha',.3)
 
 
     %% beta attivo dopo t1
@@ -130,7 +134,7 @@ if pplot == 1
 
     hold on
     plot(t,x(:,2),'black','LineStyle','--')
-    area(t,x(:,2),'FaceColor','r','FaceAlpha',.3,'EdgeAlpha',.3)
+    area(t,x(:,2),'FaceColor','black','FaceAlpha',.3,'EdgeAlpha',.3)
     hold on
     set(gca,'FontSize',12.5);
     %title(['beta = ' num2str(beta) ', gamma = ' num2str(gamma)])
@@ -143,8 +147,8 @@ if pplot == 1
         'defaultLegendInterpreter','latex');
 
     %xline(t1,'--','attivazione $\beta$','interpreter','latex')
-    xlabel("Tempo dal primo caso")
-    ylabel("Numero di casi")
+    xlabel("Tempo dalla prima infezione")
+    ylabel("Numero di infetti")
     grid on
     box off
     set(gca,'XTickLabel',{},'YTickLabel',{})

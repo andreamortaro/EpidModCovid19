@@ -86,7 +86,7 @@ set(gca, 'fontsize', 12.5)
 
 fig = figure()
 max_k = max(krange);
-area(srange,[krange',2*max_k-krange']);   
+H = area(srange,[krange',2*max_k-krange'],'facecolor',[0.9 0.7 0.3]);
 hold on
 area(srange,krange','facecolor',"white")
 %title(["Valori ammissibili per k \n\
@@ -98,7 +98,7 @@ area(srange,krange','facecolor',"white")
 #              "backgroundcolor","white");  bug margini
 xlabel("$S_0$")
 ylabel("k")
-axis tight
+axis([0 1 0 0.012])
 
 print (fig, "ammissibili", "-dpdflatexstandalone", "-F:20");
 system ("pdflatex ammissibili");

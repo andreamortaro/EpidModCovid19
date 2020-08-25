@@ -10,7 +10,7 @@ close all
 clear
 clc
 
-global  x0 tm ym Nass t_0 t_u tspan pnt
+global  x0 tm ym Nass t_0 t_u pnt
 
 % Upload dati protezione civile
 tmp = fullfile('..','00 - dpc_data','2020-05-22','dati-andamento-nazionale');
@@ -28,13 +28,10 @@ ym  = [Ibar(tm+1),Rbar(tm+1)];
 
 K0  = [0.5,0.1];                    % guess iniziale per [beta,gamma]
 pnt = 5;                            % piu nodi per migliore risoluzione sistema minquad
-nstep = pnt*t_u+1;
-tspan = linspace(t_0,t_u,nstep);
 
 Nass = 60317000;                    % popolazione italiana istat 11.02.2020
 I0 = Ibar(t_0+1); R0 = Rbar(t_0+1); S0 = Nass-I0-R0;
 x0 = [S0;I0]/Nass;                  % dato iniziale in percentuale
-
 
 % Minimizzazione
 
@@ -69,20 +66,24 @@ set(groot,...
 
 set(gca,'FontSize',12.5)
 
-fig = figure
-%plot(t,x(:,2),'r',t,x(:,3),'b',tm,Ibar(tm+1),'rx',tm,Rbar(tm+1),'bx');
-hold on
+fig = figure;
 plot(t,x(:,2),'SeriesIndex',1);
+hold on
 plot(t,x(:,3),'SeriesIndex',2);
-plot(tm,Ibar(tm+1),'SeriesIndex',1,'LineStyle','none','Marker','*');
-plot(tm,Rbar(tm+1),'SeriesIndex',2,'LineStyle','none','Marker','*');
+plot(tm,Ibar(tm+1),'o',...
+    'MarkerSize',3,...
+    'MarkerEdgeColor','blue',...
+    'MarkerFaceColor',[1 .6 .6]);
+plot(tm,Rbar(tm+1),'o',...
+    'MarkerSize',3,...
+    'MarkerEdgeColor','red',...
+    'MarkerFaceColor',[1 .6 .6]);
+
 
 ax = gca;
 ax.XTick = 0:7:14;
 ax.XTickLabel = date((0:7:14)+1);
 ax.XTickLabelRotation = 45;
-%ax.YAxis.Exponent = 2;
-%axis tight
 box on
 legend('I','R','$I_{bar}$','$R_{bar}$','Location','NorthWest');
 % title({
@@ -123,7 +124,7 @@ sensys = @(m,D) [-beta*x2(m)*D(1)-beta*x1(m)*D(3)-x1(m)*x2(m);...
 % Risolvo con Eulero Esplicito, il sistemare e' lineare in D
 D = odesol(sensys,t,D0);
 
-figure(2)
+fig2 = figure();
 plot(t,D(:,1),t,D(:,2),t,D(:,3),t,D(:,4),t,D(:,5),t,D(:,6))
 %title('Sensitivity')
 H=legend('$\partial_{\beta}S$','$\partial_{\gamma}S$',...
@@ -137,5 +138,5 @@ grid on
 xlabel('t')
 set(gca,'FontSize',12.5)
 
-exportgraphics(figure(2),'sensitivita.pdf','ContentType','vector',...
+exportgraphics(fig2,'sensitivita.pdf','ContentType','vector',...
                'BackgroundColor','none')

@@ -204,11 +204,17 @@ x = Nass.*x;      % normalizzo
 tt = t_u:1:t_c;
 
 fig = figure();
-plot(t,x(:,2),'SeriesIndex',1);
+plot(t,x(:,2),'SeriesIndex',1,'LineWidth',2);
 hold on
-plot(t,x(:,3),'SeriesIndex',2);
-plot(tt,Ibar(tt+1),'SeriesIndex',1,'LineStyle','none','Marker','*');
-plot(tt,Rbar(tt+1),'SeriesIndex',2,'LineStyle','none','Marker','*');
+plot(t,x(:,3),'SeriesIndex',2,'LineWidth',2);
+plot(tt,Ibar(tt+1),'o',...
+    'MarkerSize',3,...
+    'MarkerEdgeColor','blue',...
+    'MarkerFaceColor',[1 .6 .6]);
+plot(tt,Rbar(tt+1),'o',...
+    'MarkerSize',3,...
+    'MarkerEdgeColor','red',...
+    'MarkerFaceColor',[1 .6 .6]);
 
 ax = gca;
 ax.XTick = [t_u,37,67,t_c];
