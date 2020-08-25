@@ -15,8 +15,8 @@ clc
 global Nass beta gamma t_u t_c Ibar Rbar days k_c
 
 pplot = 1;  % stampare funzionale
-oold  = 1;  % stampo il funzionale nella vecchia maniera
-ssave = 1;  % salvare le figure
+ssave = 0;  % salvare le figure
+oold = 0;
 
 
 % Upload dati protezione civile
@@ -50,7 +50,7 @@ if pplot == 1
     if oold == 1
         % Primo intevallo
         kspan = linspace(1e-12,1e-2,50);
-        pnt = 10;
+        pnt = 20;
         [K1,L1] = plot_minquad_kdiscreti(kspan,pnt);
 
         fig1 = figure();
@@ -68,13 +68,13 @@ if pplot == 1
         end
         
         % secondo plot  
-        kspan = linspace(1e-2,10,150);
-        pnt = 15;
+        kspan = linspace(1e-12,1e-2,150);
+        pnt = 50;
         [K2,L2] = plot_minquad_kdiscreti(kspan,pnt);
 
         fig2 = figure();
         set(gca,'FontSize',12.5);
-        plot(K2,L2)
+        %plot(K2,L2)
         xlabel("$\kappa$")
         ylabel("L($\kappa$)")
         title(['Funzionale in [' num2str(kspan(1)) ',' num2str(kspan(end)) ']'])
@@ -88,42 +88,41 @@ if pplot == 1
     end
     
     % plot con zoom
-    kspan = linspace(1e-12,0.05,150);
-    pnt = 10;
+    kspan = linspace(1e-12,0.1,150);
+    pnt = 50;
     [K1,L1] = plot_minquad_kdiscreti(kspan,pnt);
 
     fig = figure();
     xlabel("$\kappa$")
     ylabel("L($\kappa$)")
-    set(gca,'FontSize',12.5);
+    title(['Funzionale in [' num2str(kspan(1)) ',' num2str(kspan(end)) ']'])
     grid on
-    box on
     hold on 
     
     % riplotto sopra i risultati ma su un intervallo diverso
-    kspan = linspace(1e-12,10,100);
-    pnt = 15;
+    kspan = linspace(1e-12,10,150);
+    pnt = 50;
     [K2,L2] = plot_minquad_kdiscreti(kspan,pnt);
     plot(K2,L2)
     
     % zoomPlot to highlight a portion of the major plot
-    [p,z] = zoomPlot(K1,L1,[1e-12 1e-2],[0.4 0.255 0.4 0.4],[1 3]);
+    [p,z] = zoomPlot(K1,L1,[1e-12 1e-2],[0.4 0.25 0.4 0.4],[1 3]);
     z.XLim = [0 0.01];
-    z.YLim = [0 1e14];
+    z.YLim = [0 9e13];
     z.XGrid = 'on'; z.YGrid = 'on';
-    z.XTick = 0:0.0025:0.010;
-	z.XAxis.TickLabelFormat = '%,.3f';
-    set(z,'FontSize',10);
-    
+    z.XTick = 0:0.01;
     hold on
     legend hide
-    
+    set(gca,'FontSize',12.5);
+
     if ssave == 1
-        exportgraphics(fig,'funzionalezoom.pdf','ContentType','vector',...
+        exportgraphics(fig2,'funzionale2.pdf','ContentType','vector',...
                        'BackgroundColor','none')
     end      
 end
+   
 
+return
 
 %% Stimo i K discreti
 
@@ -173,16 +172,12 @@ tspan = linspace(t_u,t_c,50);
 
 figure()
 set(gca,'FontSize',12.5);
+hold on
 plot(days,k_c,'*',tspan,K(tspan'));
 title("fitting $\kappa$");
 text(14,max(k_c)*.75,["a= " num2str(A(1)) "b= " num2str(A(2)) "c= " num2str(A(3)) ])
 xlabel("t (days)")
 ylabel("$\kappa$")
-
-if ssave == 1
-    exportgraphics(fig,'fittingk.pdf','ContentType','vector',...
-                   'BackgroundColor','none')
-end
 
 % FIGURA
 

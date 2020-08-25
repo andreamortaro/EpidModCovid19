@@ -1,4 +1,4 @@
-function [Kval,Lval] = plot_minquad_kdiscreti(kspan)     % funzionale da minimizzare
+function [Kval,Lval] = plot_minquad_kdiscreti(kspan,pnt)     % funzionale da minimizzare
 
 %
 %   L = minquad(K)
@@ -20,8 +20,7 @@ ym = [Ibar(tm+1),Rbar(tm+1)];
 I0 = Ibar(t_u+1); R0 = Rbar(t_u+1); S0 = Nass-I0-R0;
 x0 = [S0;I0]/Nass;          % dato iniziale in percentuale    
 
-pnt = 50;
-nstep = pnt*(t_c-t_u)+1;            % scritto cosi' per sapere dove minimizzare
+nstep = pnt*(t_c-t_u)+1;              % scritto cosi' per sapere dove minimizzare
 tspan = linspace(t_u,t_c,nstep);      % intervallo dove minimizzare minquad
 
 Kval = zeros(length(kspan),1);
