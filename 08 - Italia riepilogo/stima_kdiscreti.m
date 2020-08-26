@@ -1,4 +1,4 @@
-function [days, k_c]=stima_kdiscreti(kspan,window,k0_c,options)
+function [days, k_c]=stima_kdiscreti(kspan,window,k0_c,pnt)
 
 %
 %   [iter, days, k_c] = stima_kdiscreti(kspan,window,k0_c,options)
@@ -10,9 +10,11 @@ function [days, k_c]=stima_kdiscreti(kspan,window,k0_c,options)
 %   INPUTS:
 %   kspan       : Intervallo temporale considerato.
 %   window      : struttura che contiene i seguenti campi:
-%                 - window.kl: estremo sinistro finestra integrazione rispetto t_i
-%                 - window.kr: estremo destro finestra integrazione rispetto t_i
-%                 - window.k0: guess iniziale
+%                 - window.kl   : estremo sinistro finestra integrazione rispetto t_i
+%                 - window.kr   : estremo destro finestra integrazione rispetto t_i
+%                 - window.k0   : guess iniziale
+%                 - window.pnt  : moltiplicatore per nodi integrazione
+%   k0_c        : guess.
 %
 %   OUTPUTS:
 %   iter       : numero di iterazioni fatte nel ciclo for
@@ -29,11 +31,10 @@ h = window.h;
 kl = window.kl;
 kr = window.kr;
 
-pnt = 1;        % default
-if (nargin == 4) 
-  if (isfield(options,'pnt'))   % aggiungo nodi per migliore risoluzione minquad
-    pnt = options.pnt;
-  end
+% aggiungo nodi per migliore risoluzione minquad
+% se non e' presente in input lo agigungo manualmente
+if (nargin == 3)
+  pnt = 1;
 end
 
 days = zeros(t_c-kr*h-t_u,1);
@@ -105,12 +106,9 @@ global x0 beta gamma tspan Nass tl tr
                     beta*x(2) - 2*x(1)*(x(2)^2)/K,  beta*x(1) - 2*(x(1)^2)*x(2)/K - gamma];
     options.Jacobian = Jac;
     
-    tt = linspace(tl,tr,11);
-    [t, xm]  = eulerorosenbrock(SI,tt,x0,options);
+    nstep = 11;
+    [t, xm]  = eulerorosenbrock(SI,linspace(tl,tr,nstep),x0,options);
     
-    %[t, xm]  = eulerorosenbrock(SI,tspan,x0,options);
-    
-    %xm(:,3) = ones(length(t),1) - xm(:,1) - xm(:,2);      % ricavo R per post-processing
     %xm = Nass.*xm;                                       % ???
     
     % controllo la condizione con i valori in percentuale, altrimenti e'

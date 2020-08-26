@@ -64,9 +64,7 @@ set(groot,...
     'defaultAxesTickLabelInterpreter','latex',...
     'defaultLegendInterpreter','latex');
 
-set(gca,'FontSize',12.5)
-
-fig = figure;
+fig = figure()
 plot(t,x(:,2),'SeriesIndex',1);
 hold on
 plot(t,x(:,3),'SeriesIndex',2);
@@ -92,6 +90,8 @@ legend('I','R','$I_{bar}$','$R_{bar}$','Location','NorthWest');
 %     ['$\gamma$ = ' num2str(k2,3)]
 %     });
 ylabel('casi confermati');
+set(gca,'FontSize',12.5)
+
 
 exportgraphics(fig,'italia-preLock.pdf','ContentType','vector',...
                'BackgroundColor','none')
