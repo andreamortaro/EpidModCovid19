@@ -40,6 +40,7 @@ x = Nass.*x;                                    % ri-normalizzo da percentuale a
 %% FIGURA
 
 if ffig == 1
+    
     % imposto latex come inteprete per i grafici
     set(groot,...
         'defaulttextinterpreter','latex',...
@@ -65,11 +66,6 @@ if ffig == 1
     ax.XTickLabelRotation = 45;
     box on
     legend('I','R','$I_{bar}$','$R_{bar}$','Location','NorthWest');
-    % title({
-    %     ['Dati Italia']
-    %     ['$\beta$ = ' num2str(k1,4)]
-    %     ['$\gamma$ = ' num2str(k2,3)]
-    %     });
     ylabel('casi confermati');
     set(gca,'FontSize',12.5)
     

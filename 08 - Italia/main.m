@@ -48,6 +48,7 @@ pnt = 5;                            % piu nodi per migliore risoluzione sistema 
 
 [tpl, xpl, beta, gamma] = main_prelock(K0, pnt, ssens, ffig, ssave);
 
+
 if lock == 0
     return
 end    
@@ -82,6 +83,8 @@ end
 
 %% Figure: riepilogo
 
+ssave = 1;  % salvo la figura
+
 fig = figure();
 
 tt = [tpl;tl]';
@@ -101,7 +104,7 @@ ax.XTick = [t_0,t_u,37,67,t_c];
 ax.XTickLabel = date([t_0,t_u,37,67,t_c]+1);
 ax.XTickLabelRotation = 45;
 xline(t_u,':','inizio Lockdown')
-%axis([0 3e5])      % come albi
+%ylim([0 3e5])      % come albi
 
 box on
 legend('I','$I_{bar}$','Location','Best');
