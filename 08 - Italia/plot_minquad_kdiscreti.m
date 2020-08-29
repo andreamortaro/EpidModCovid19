@@ -68,5 +68,4 @@ for K = kspan
     Lval(it) = L;
 end
 
-
 end

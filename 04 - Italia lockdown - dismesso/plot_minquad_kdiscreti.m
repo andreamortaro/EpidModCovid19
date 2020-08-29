@@ -50,16 +50,16 @@ for K = kspan
 
     
     % Calcolo numericamente la funzione dei minimi quadrati L
-    psi = 0.5;
-    phi = 1-psi;
+    phi = 0.5;
+    psi = 1-phi;
     n = 2;
     deltat = t_c-t_u;
     tt = pnt*(tm-t_u)+1;          % tempi soluzione (calcolata con diverso nstep da tm, piu punti)
 
     L = 0;
     for j = 2:length(tm)
-        L = L+(psi*(ym(j,1)-xm(tt(j),2)).^n + ...
-               phi*(ym(j,2)-xm(tt(j),3)).^n);  % misura minimi quadrati
+        L = L+(phi*(ym(j,1)-xm(tt(j),2)).^n + ...
+               psi*(ym(j,2)-xm(tt(j),3)).^n);  % misura minimi quadrati
     end
     L = deltat*L;
 

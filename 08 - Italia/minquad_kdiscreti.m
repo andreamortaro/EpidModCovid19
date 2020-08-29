@@ -32,15 +32,15 @@ xm(:,3) = ones(length(t),1) - xm(:,1) - xm(:,2);	% ricavo R per post-processing
 xm = Nass.*xm;                                      % ri-normalizzo da percentuale a Nass
 
 % Calcolo numericamente la funzione dei minimi quadrati L
-psi = 0.5;
-phi = 1-psi;
+phi = 0.5;
+psi = 1-phi;
 n = 2;
 deltat = tr-tl;
 tt = pnt*(tm-tl)+1;          % tempi soluzione (calcolata con diverso nstep da tm, piu punti)
 
 L = 0;
-for j = 2:length(tm)
-    L = L+(psi*(ym(j,1)-xm(tt(j),2)).^n + phi*(ym(j,2)-xm(tt(j),3)).^n);  % misura minimi quadrati
+for jj = 2:length(tm)
+    L = L+(phi*(ym(jj,1)-xm(tt(jj),2)).^n + psi*(ym(jj,2)-xm(tt(jj),3)).^n);  % misura minimi quadrati
 end
 
 % NOTA:

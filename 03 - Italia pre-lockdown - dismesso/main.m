@@ -64,7 +64,7 @@ set(groot,...
     'defaultAxesTickLabelInterpreter','latex',...
     'defaultLegendInterpreter','latex');
 
-fig = figure()
+fig = figure();
 plot(t,x(:,2),'SeriesIndex',1);
 hold on
 plot(t,x(:,3),'SeriesIndex',2);

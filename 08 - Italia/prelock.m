@@ -1,20 +1,58 @@
-%{
-Prima del 09/03/20: il lockdown non e' ancora partito, l'obbiettivo ora e'
-stimare i parametri beta e gamma del modello.
-Aggiustamento versione 2020-06-01: analisi sensitivita'.
-%}
+function [t, x, beta, gamma] = prelock(data, K0, options)
 
-function [t, x, beta, gamma] = main_prelock(K0, pnt, ssens,ffig, ssave)
+%
+%   [t, x, beta, gamma] = prelock(data, K0, options)
+%
+%   Lockdown è divisa in 3 parti: calcolo i k discreti, fitto i valori
+%   discreti per ottenere una funzione continua k(t) inserendo i parametri
+%   del fitting polinomiale nell'output A e simulo il modello aggiornato.
+%
+%   INPUTS:
+%   data        : struttura che contiene i dati utili come Ibar e Rbar
+%   K0_disc     : guess per il calcolo dei k discreti
+%   options     : struttura contenente i campi che regolano plot e il campo
+%                 pnt per aumentare nodi integrazione in minquad_kdiscreti
+%
+%   OUTPUTS:
+%   t           : tempi soluzione del modello simulato
+%   x           : soluzione modello simulato
+%   beta        : parametro del SIR ottenuto dall'ottimizzazione
+%   gamma       : parametro del SIR ottenuto dall'ottimizzazione
+%
 
-global  x0 tm ym Nass t_0 t_u Ibar Rbar date pnt
+global t_0 t_u Nass Ibar Rbar date x0 tm ym pnt
 
-% DATI:
+% recupero i valori che servono
+[Nass,Ibar,Rbar] = data.value;
+[t_0,t_u,~,date] = data.time;
 
+if nargin == 2
+    ssens = 1;
+    ffig = 1;
+    ssave = 1;
+else
+    if isfield(options,'ssens')
+        ssens = options.ssens;
+    end
+    if isfield(options,'ffig')
+        ffig = options.ffig;
+    end
+    if isfield(options,'ssave')
+        ssave = options.ssave;
+    end 
+end
+
+% punti dove minimizzare
 tm  = t_0:1:t_u;                    % tm = [0,..,t_u]
 ym  = [Ibar(tm+1),Rbar(tm+1)];
 
 I0 = Ibar(t_0+1); R0 = Rbar(t_0+1); S0 = Nass-I0-R0;
 x0 = [S0;I0]/Nass;                  % dato iniziale in percentuale
+
+pnt = 1;    % default
+if(nargin==3)
+    pnt = options.pnt;
+end
 
 % Minimizzazione
 
@@ -70,7 +108,7 @@ if ffig == 1
     set(gca,'FontSize',12.5)
     
     if ssave == 1
-        exportgraphics(fig,'italia-preLock.pdf','ContentType','vector',...
+        exportgraphics(fig,'figure/italia-preLock.pdf','ContentType','vector',...
                        'BackgroundColor','none')
     end
 end
@@ -112,7 +150,7 @@ if ssens == 1
     set(gca,'FontSize',12.5)
     
     if ssave == 1
-        exportgraphics(fig2,'sensitivita.pdf','ContentType','vector',...
+        exportgraphics(fig2,'figure/sensitivita.pdf','ContentType','vector',...
                        'BackgroundColor','none')
     end
                

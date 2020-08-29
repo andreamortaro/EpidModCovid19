@@ -1,18 +1,13 @@
 %{
-
     Situazione Italia: prelockdown, lockdown
-
     Alla fine plot dela simulazione del modello in entrambe le fasi.
-
 %}
 
+clear all
 close all
-clear
 clc
 
-global t_0 t_u t_c Nass Ibar Rbar date beta gamma
-
-% controllo blocchi codice: posso attivare lockdown e riepilogo
+% controllo blocchi codice: posso fermare lockdown e riepilogo
 lock      = 1;
 riepilogo = 1;
 
@@ -28,57 +23,73 @@ path_folder         = result.Name;                  % percorso alla cartella
 % Attenzione: gli indici in matrice partono da 1 e tm parte da 0
 % date(i), Ibar(i), Rbar(i) e' in corrispondenza con t_i-1
 
-% DATI:
-t_0 = 0;                           % 2020-02-24
+% Dati
+t_0 = 0;                           % 2020-02-24 iniziale
 t_u = 14;                          % 2020-03-09 t finale senza controllo
-t_c = length(date)-1;              % decremento perche' parto da 0
+t_c = length(date)-1;              % ultimo tempo
 Nass = 60317000;                   % popolazione italiana istat 11.02.2020
 %Nass = 6e9;                       % imbrogliando così arrivo a k~1e-5 (in
                                    % main lockdown
-                                   
+
+% Creo struttura dati da passare alle function
+
+data(1).value = Nass;
+data(2).value = Ibar;
+data(3).value = Rbar;
+
+data(1).time = t_0;
+data(2).time = t_u;
+data(3).time = t_c;
+data(4).time = date;
+
 %% Pre-Lockdown
 
 % controlo immagini e figure
-ssens = 0;      % analisi sensitività
-ffig  = 1;      % stampare figure
-ssave = 0;      % salvare immagine
+options.ssens = 0;      % analisi sensitività
+options.ffig  = 1;      % stampare figure
+options.ssave = 1;      % salvare immagine
 
-K0  = [0.5,0.1];                    % guess iniziale per [beta,gamma]
-pnt = 5;                            % piu nodi per migliore risoluzione sistema minquad
+options.pnt   = 5;      % piu nodi per migliore risoluzione sistema minquad
+K0  = [0.5,0.1];        % guess iniziale ottimizzazione per [beta,gamma]
 
-[tpl, xpl, beta, gamma] = main_prelock(K0, pnt, ssens, ffig, ssave);
+[tpl, xpl, beta, gamma] = prelock(data, K0, options);
 
+% inserisco i parametri nella struttura "data"
+data(1).parameters = beta;
+data(2).parameters = gamma;
 
 if lock == 0
     return
+else
+    clear options   % ripulisco il settaggio figure
 end    
 
 %% Lockdown
 
-ffunz = 0;  % stampare funzionale
-oold  = 0;  % stampo il funzionale nella vecchia maniera
-ffig  = 1;  % stampare le figura
-ssave = 1;  % salvare le figure
+% controlo immagini e figure
+options.ffunz = 0;      % stampare funzionale
+options.oold  = 0;      % stampo il funzionale nella vecchia maniera
+options.ffig  = 1;      % stampare le figura
+options.ssave = 1;      % salvare le figure
 
-% 1. stimo i K discreti
+% 1. stimo i k discreti
+K0_disc	= 1e-5;         % guess iniziale
+options.pnt	= 100;      % aumento numero nodi integrazione
 
-k0_c	= 1e-5;          % guess iniziale (ottengo sempre gli stessi k_c)
-pnt     = 100;           % aumento numero nodi integrazione
-
-% 2. Fitto i k_c discreti ottenuti e ricavo k(t)
-
+% 2. Fitto i k discreti ottenuti e ricavo k(t)
 a = 1e-6; b = 1e-4; c = 1e-3;       % fitting polinomiale
-kguess = [a,b,c];                   % guess iniziale
+K0_cont = [a,b,c];                  % guess iniziale
 
 % 3. Simulazione modello oltre il lockdown
-deltatc = 10;
+options.deltatc = 10;
 
-% simulazione con ER del modello durante il lockdwon con i parametri stimati
-% A = [a,b,c] parametri per il fitting polinomiale
-[tl,xl,A] = main_lockdown(k0_c, pnt, kguess, deltatc, ffunz, oold, ffig, ssave);
+% simulazione modello durante lockdown e fitting dei k discreti
+[tl,xl,A] = lockdown(data, K0_disc, K0_cont, options);
 
 if riepilogo == 0
     return
+else
+    clear options
 end    
 
 %% Figure: riepilogo
@@ -87,24 +98,23 @@ ssave = 1;  % salvo la figura
 
 fig = figure();
 
-tt = [tpl;tl]';
-ii = [xpl(:,2);xl(:,2)]';
+tt = [tpl;tl]'; ii = [xpl(:,2);xl(:,2)]';
 
-%plot(tt,ii,'SeriesIndex',3,'Linewidth',2)
-plot(tt,ii,'Linewidth',2,'color',[0 0 0]+0.3)
-
-hold on
 plot(t_0:t_c,Ibar,'o',...
-    'MarkerSize',3,...
+    'MarkerSize',4,...
     'MarkerEdgeColor','red',...
     'MarkerFaceColor',[1 .6 .6])
+
+hold on
+%plot(tt,ii,'SeriesIndex',3,'Linewidth',2)
+plot(tt,ii,'Linewidth',2.5,'color',[0 0 0]+0.3)
 
 ax = gca;
 ax.XTick = [t_0,t_u,37,67,t_c];
 ax.XTickLabel = date([t_0,t_u,37,67,t_c]+1);
 ax.XTickLabelRotation = 45;
 xline(t_u,':','inizio Lockdown')
-%ylim([0 3e5])      % come albi
+%ylim([0 3e5])
 
 box on
 legend('I','$I_{bar}$','Location','Best');
@@ -118,6 +128,6 @@ set(groot,...
     'defaultLegendInterpreter','latex');  
 
 if ssave == 1
-    exportgraphics(fig,['italia_riepilogo ' num2str(date(t_c+1)) '.pdf'],'ContentType','vector',...
+    exportgraphics(fig,['figure/italia_riepilogo ' num2str(date(t_c+1)) '.pdf'],'ContentType','vector',...
                    'BackgroundColor','none')
 end
