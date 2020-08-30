@@ -12,18 +12,21 @@ function L = minquad_kcontinuo(A)     % funzionale da minimizzare
 %   L       : funzione minimi quadrati
 %
 
-global days k_c
+global days K_disc regione
 
-%K = @(t) A(1)*exp(A(2)*t).*(1-exp(A(3)*t));       % fitting esponenziale
-K = @(t) -A(1)*t^2 + A(2)*t - A(3);
-
+switch regione
+    case {'Veneto','Emilia-Romagna','Piemonte'}
+        K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    otherwise
+        K = @(t) -A(1)*t^2 + A(2)*t - A(3);
+end
 
 % Calcolo numericamente la funzione dei minimi quadrati L
 n = 2;
 L = 0;
 for j = 1:1:length(days)
     day = days(j);
-    L = L+(k_c(j)-K(day)).^n;      % misura minimi quadrati
+    L = L+(K_disc(j)-K(day)).^n;      % misura minimi quadrati
 end
 
 deltat = days(end)-days(1);

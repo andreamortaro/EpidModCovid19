@@ -1,4 +1,4 @@
-function L = minquad_preLock(K)     % funzionale da minimizzare
+function L = minquad_prelock(K)     % funzionale da minimizzare
 
 %
 %   L = minquad(K)
@@ -12,7 +12,7 @@ function L = minquad_preLock(K)     % funzionale da minimizzare
 %   L       : funzione minimi quadrati
 %
 
-global  x0 tm ym Nass t_0 t_u tspan pnt
+global  t_0 t_u tm ym x0 Nass pnt
 
 SI = @(t,x) [-K(1)*x(1)*x(2); K(1)*x(1)*x(2) - K(2)*x(2)]; % riscrivo sys con K
 

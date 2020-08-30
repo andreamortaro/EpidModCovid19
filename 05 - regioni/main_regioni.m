@@ -1,10 +1,15 @@
-close all
+%{
+    Situazione regioni: prelockdown, lockdown
+    Alla fine plot dela simulazione del modello in entrambe le fasi.
+%}
+
 clear all
+close all
 clc
 
-% Identificazione parametri
-
-global t_0 t_u t_c date regione Ibar Rbar Nass beta gamma days k_c
+% controllo blocchi codice: posso fermare lockdown e riepilogo
+lock      = 1;
+riepilogo = 1;
 
 % Upload dati protezione civile
 tmp = fullfile('..','00 - dpc_data','2020-05-22','dati-regioni');
@@ -15,7 +20,7 @@ path_folder = result.Name;              % percorso alla cartella
 % date(i), Ibar(i), Rbar(i) e' in corrispondenza con t_i-1
 
 N_reg = (1:21)';
-T1 = table(N_reg,reg_label)
+T= table(N_reg,reg_label) %#ok<NOPTS>
 
 % le regioni con pochi contagli ti portano a K = K0.
 i_reg = input("Scegliere n per la corrispondente regione: ");
@@ -24,7 +29,6 @@ if(i_reg==3 || i_reg==18)
    warning('foo:bar','N non é corretto per Trento e Bolzano.\n...Press any key to continue')
    pause()
 end
-
 
 % Recupero Nass, Ibar e Rbar della regione i_reg selezionata
 tmp = 'tavola_bilancio_mensile_2019_fixed.csv';
@@ -42,103 +46,120 @@ t_0 = 0;                    % 2020-02-24
 t_u = 14;                   % 2020-03-09 t finale senza controllo
 t_c = length(date)-1;       % decremento perche' parto da 0
 
+% Creo struttura dati da passare alle function
+
+data(1).value = Nass;
+data(2).value = Ibar;
+data(3).value = Rbar;
+
+data(1).time = t_0;
+data(2).time = t_u;
+data(3).time = t_c;
+data(4).time = date;
+
+data(1).regione = regione;
+
 %% Pre-Lockdown [t_0,t_u]: stima beta e gamma prima del Lockdown
-% (gestisco all'interno la figura)
 
-K = stima_preLock();
+% controlo immagini e figure
+options.ffig  = 1;      % stampare figure
+options.ssave = 1;      % salvare immagine
 
-beta = K(1); gamma = K(2);
+options.pnt   = 100;     % piu nodi per migliore risoluzione sistema minquad
+K0 = [0.5,0.05];        % guess iniziale [beta,gamma]
+
+[tpl,xpl,beta,gamma] = regioni_prelock(data,K0,options);
+
+% inserisco i parametri nella struttura "data"
+data(1).parameters = beta;
+data(2).parameters = gamma;
+
 R_0 = beta/gamma;
 table(regione,beta,gamma,R_0)
 
+if lock == 0
+    return
+else
+    clear options   % ripulisco il settaggio figure
+end
 
-%% Lockdown [t_u,t_c]: trovati beta e gamma calcolo il parametro di controllo k
+%% Lockdown
 
-% definisco la finestra con daily time step
-h  = 1; kl = 3; kr = 4;
-window.h = h;   window.kl = kl; window.kr = kr;
+% controlo immagini e figure
+options.ffig  = 1;      % stampare le figura
+options.ssave = 1;      % salvare le figure
 
-k0_c = 1;                  % guess iniziale (ottengo sempre gli stessi k_c)
-kspan = t_u:1:t_c-kr*h;    % intervallo ricerca k discreto
+% 1. stimo i k discreti
+K0_disc = 1;               % guess iniziale (ottengo sempre gli stessi k_c)
 options.pnt = 10;          % aumento numero nodi
 
+% 2. Fitto i k discreti ottenuti e ricavo k(t)
+
+switch regione
+    case 'Veneto'
+        a = 1e-2; b = 45; c = 37;           % fitting gaussiana
+    case {'Emilia-Romagna','Piemonte'}
+        a = 1e-3; b = 50; c = 30;
+    otherwise
+        a = 1e-6; b = 1e-4; c = 1e-3;       % fitting polinomiale
+end
+K0_cont = [a,b,c];                  % guess iniziale
+% cambia in regioni_lockdown e minquad_kcontinuo
+
+% 3. Simulazione modello oltre il lockdown
+options.nstep = 1000;
+options.deltatc = 10;
+
 % trovo i k_c discreti nell'intervallo [t_u, t_c]
-[days, k_c] = stima_Lock(kspan,window,k0_c,options);
+% mi salvo i K_disc per capire il fitting da fare
+[tl,xl,A,days,K_disc] = regioni_lockdown(data,K0_disc,K0_cont,options);
 
-T2 = table(days,k_c,'VariableNames',{'t_i' 'k_c(t_i)'}) %#ok<NOPTS>
+if riepilogo == 0
+    return
+else
+    clear options
+end    
 
+%% Figure: riepilogo
 
-%% Fitting dei k_c discreti ottenuti
+ssave = 1;  % salvo la figura
 
-a = 1e-6;
-b = 1e-4;
-c = 1e-3;
+fig = figure();
 
-A0 = [a,b,c];
-A = fitting_k(A0,days,k_c);
+%tt = [tpl;tl]'; ii = [xpl(:,2);xl(:,2)]';
 
-%update K
-K = @(t) -A(1)*t.^2 + A(2)*t - A(3);
+p1 = plot(t_0:t_c,Ibar,'o',...
+    'MarkerSize',4,...
+    'MarkerEdgeColor','red',...
+    'MarkerFaceColor',[1 .6 .6]);
 
-%FIGURA
-tspan1 = linspace(t_u,t_c,50);
-
-fig_fittingk = figure();
 hold on
-plot(days,k_c,'*',tspan1,K(tspan1'));
-box on
-title({['fitting $\kappa$']
-       ['a= ' num2str(A(1))]
-       ['b= ' num2str(A(2))]
-       ['c= ' num2str(A(3))]
-       });
-set(gca,'FontSize',12.5);
-
-exportgraphics(fig_fittingk,'figure/' + regione + '_fittingk.pdf',...
-               'ContentType','vector',...
-               'BackgroundColor','none')
-
-%% Simulazione modello con i parametri trovati (durante LOCKDOWN)
-
-% update sistema
-SI = @(t,x) [-(beta - x(1)*x(2)/K(t))*x(1)*x(2);
-              (beta - x(1)*x(2)/K(t))*x(1)*x(2) - gamma*x(2)];
-
-Jac = @(t,x) [ -beta*x(2) + 2*x(1)*(x(2)^2)/K(t), -beta*x(1) + 2*(x(1)^2)*x(2)/K(t);
-                beta*x(2) - 2*x(1)*(x(2)^2)/K(t),  beta*x(1) - 2*(x(1)^2)*x(2)/K(t) - gamma];
-options.Jacobian = Jac;
-
-I0 = Ibar(t_u+1); R0 = Rbar(t_u+1); S0 = Nass-I0-R0;
-x0 = [S0;I0]/Nass;          % dato iniziale in percentuale
-
-nstep = 100;
-tspan2 = linspace(t_u,t_c,nstep);            % durante il Lockdown
-
-[t, x]  = eulerorosenbrock(SI,tspan2,x0,options);
-x(:,3) = ones(length(t),1) - x(:,1) - x(:,2);      % ricavo R per post-processing
-x = Nass.*x;      % normalizzo
-
-
-fig_Lock = figure();
-%plot(t,x(:,2),'r',t,x(:,3),'b',tm,Ibar(tm+1),'rx',tm,Rbar(tm+1),'bx');
-plot(t,x(:,2),'SeriesIndex',1);
-hold on
-plot(t,x(:,3),'SeriesIndex',2);
-
-tt = t_u:1:t_c;
-plot(tt,Ibar(tt+1),'SeriesIndex',1,'LineStyle','none','Marker','*');
-plot(tt,Rbar(tt+1),'SeriesIndex',2,'LineStyle','none','Marker','*');
+p2 = plot([tpl;tl]',[xpl(:,2);xl(:,2)]','Linewidth',2.5,'color','black');
+p2.Color(4) = 0.6;
 
 ax = gca;
-ax.XTick = [t_u,37,67,t_c];
-ax.XTickLabel = date([t_u,37,67,t_c]+1);
+ax.XTick = [t_0,t_u,37,67,t_c];
+ax.XTickLabel = date([t_0,t_u,37,67,t_c]+1);
 ax.XTickLabelRotation = 45;
+xline(t_u,':','inizio Lockdown')
+%ylim([0 3e5])
 
 box on
-legend('I','R','$I_{bar}$','$R_{bar}$','Location','NorthWest');
-title([char(regione), ', simulazione SIR controllato']);
-set(gca,'FontSize',12.5);
+legend([p1,p2],'$I_{bar}$','I','Location','Best');
+ylabel('casi confermati');
+title(char(regione),'FontSize',13);
 
-exportgraphics(fig_Lock,'figure/' + regione + '_Lock.pdf',...
-               'ContentType','vector',...
-               'BackgroundColor','none')
+set(gca,'FontSize',12.5)
+
+% imposto latex come inteprete per i grafici
+set(groot,...
+    'defaulttextinterpreter','latex',...
+    'defaultAxesTickLabelInterpreter','latex',...
+    'defaultLegendInterpreter','latex');  
+
+if ssave == 1
+        exportgraphics(fig,...
+                       ['figure/' char(regione) '_riepilogo' num2str(date(t_c+1)) '.pdf'],...
+                        'ContentType','vector',...
+                        'BackgroundColor','none')
+end

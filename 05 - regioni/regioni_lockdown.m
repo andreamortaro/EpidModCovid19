@@ -1,4 +1,4 @@
-function [t,x,A] = lockdown(data, K0_disc, K0_cont, options)
+function [t,x,A,days,K_disc] = regioni_lockdown(data, K0_disc, K0_cont, options)
 
 %
 %   [t,x,A] = lockdown(data, K0_disc, kguess, otpions)
@@ -17,40 +17,28 @@ function [t,x,A] = lockdown(data, K0_disc, K0_cont, options)
 %   t           : tempi soluzione del modello simulato
 %   x           : soluzione modello simulato
 %   A           : parametri stimati per fittare i K_disc
+%   days        : giorni (non indici) in cui ho trovato k discreto
+%   K_disc      : il valore di k discreto
 %
 
-global t_u t_c Nass Ibar Rbar beta gamma date K_disc days
+global t_u t_c Nass Ibar Rbar beta gamma date K_disc days regione
 
 % recupero i valori che servono
 [Nass,Ibar,Rbar] = data.value;
 [~,t_u,t_c,date] = data.time;
+regione = data(1).regione;
 [beta,gamma] = data.parameters;
 
 if nargin == 2
-    ffunz = 1;
-    oold = 1; %#ok<NASGU>
     ffig = 1;
     ssave = 1;
 else
-    if isfield(options,'ffunz')
-        ffunz = options.ffunz;
-    end
-    if isfield(options,'oold')
-        oold = options.oold; %#ok<NASGU>
-    end    
     if isfield(options,'ffig')
         ffig = options.ffig;
     end
     if isfield(options,'ssave')
         ssave = options.ssave;
-    end 
-end
-
-
-%% Plot Funzionale
-
-if ffunz == 1
-    plot_funzionale
+    end
 end
 
 %% 1. stimo i K discreti
@@ -71,24 +59,30 @@ end
 % per comodità, procedura per i K_disc discreti su kspan su un file a parte
 [days, K_disc] = stima_kdiscreti(kspan,window,K0_disc,pnt);
 
-T = table(days,K_disc,'VariableNames',{'t_i' 'K_disc(t_i)'}) %#ok<NOPRT>
-
 %% 2. Fitto i K_disc discreti ottenuti e ricavo k(t)
 
 problem2.options    = optimoptions('fmincon','Display','iter');
 problem2.solver     = 'fmincon';
 problem2.objective  = @minquad_kcontinuo;           % funzionale obiettivo minimizzare
 problem2.x0         = K0_cont;                      % guess iniziale
-%problem2.nonlcon = @(A)mycon(A);                  % vincolo non lineare su k (=beta>0)
-
-% tecnicamente il vincolo non lineare dovrei imporlo, tuttavia
-% l'ho imposto quando ho cercato i k discreti?
+problem2.lb         = [0,0,0];
+%problem2.nonlcon    = @(A)mycon(A);                 % vincolo non lineare su k (=beta>0)
+problem2.OptimalityTolerance = 1e-12;
+problem2.StepTolerance = 1e-12;
+problem2.FunctionTolerance = 1e-12;
+% non cambia se non impongo mycon perche' gia' imposto per k disc
 
 A = fmincon(problem2);
 
 % update function
-Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);
+switch regione
+    case {'Veneto','Emilia-Romagna','Piemonte'}
+        Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    otherwise
+        Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);
+end
 
+%FIGURA
 if ffig == 1
     
     % imposto latex come inteprete per i grafici
@@ -117,8 +111,11 @@ if ffig == 1
     ax.XTickLabel = date([t_u,37,67,t_c]+1);
     ax.XTickLabelRotation = 45;
     
+    title(char(regione),'FontSize',13);
+
     if ssave == 1
-        exportgraphics(fitting,'figure/fittingk.pdf','ContentType','vector',...
+        exportgraphics(fitting,'figure/' + regione + '_fittingk.pdf',...
+                       'ContentType','vector',...
                        'BackgroundColor','none')
     end
 end
@@ -136,10 +133,11 @@ options.Jacobian = Jac;
 I0 = Ibar(t_u+1); R0 = Rbar(t_u+1); S0 = Nass-I0-R0;
 x0 = [S0;I0]/Nass;          % dato iniziale in percentuale
 
-nstep = 50;
 deltatc = 0;
+nstep = 500;
 if isfield(options,'deltatc')
     deltatc = options.deltatc;
+    nstep = options.nstep;
 end
 
 [t, x]  = eulerorosenbrock(SI,linspace(t_u,t_c+deltatc,nstep),x0,options);
@@ -184,8 +182,11 @@ if ffig == 1
     box on
     legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
 
+    title(char(regione),'FontSize',13);
+
     if ssave == 1
-        exportgraphics(fig,'figure/italia_lockdown.pdf','ContentType','vector',...
+        exportgraphics(fig,['figure/' char(regione) '_lockdown.pdf'],...
+                       'ContentType','vector',...
                        'BackgroundColor','none')
     end
 end
@@ -197,9 +198,14 @@ end
 
 function [c,ceq] = mycon(A)
 
-global x0 beta gamma t_u t_c Ibar Rbar Nass
+global x0 beta gamma t_u t_c Ibar Rbar Nass regione
 
-    Kfun = @(t) A(1)*exp(A(2)*t).*(1-exp(A(3)*t));
+    switch regione
+        case {'Veneto','Emilia-Romagna','Piemonte'}
+            Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+        otherwise
+            Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);
+    end
     
     SI = @(t,x) [-(beta - x(1)*x(2)/Kfun(t))*x(1)*x(2);
                   (beta - x(1)*x(2)/Kfun(t))*x(1)*x(2) - gamma*x(2)];
@@ -213,7 +219,7 @@ global x0 beta gamma t_u t_c Ibar Rbar Nass
     I0 = Ibar(t_u+1); R0 = Rbar(t_u+1); S0 = Nass-I0-R0;
     x0 = [S0;I0]/Nass;          % dato iniziale in percentuale
     
-    tspan = linspace(t_u,t_c,74);            % cosi non ho problemi con matrici singolari
+    tspan = linspace(t_u,t_c,30);            % cosi non ho problemi con matrici singolari
     [t, xm]  = eulerorosenbrock(SI,tspan,x0,options);
 
     %xm = Nass.*xm;                                        % ???

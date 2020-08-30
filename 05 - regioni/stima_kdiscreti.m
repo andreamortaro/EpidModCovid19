@@ -1,7 +1,7 @@
-function [days, k_c]=stima_Lock(kspan,window,k0_c,options)
+function [days, K_disc]=stima_kdiscreti(kspan,window,K0_disc,pnt)
 
 %
-%   [iter, days, k_c] = stima_kdiscreti(kspan,window,k0_c,options)
+%   [iter, days, K_disc] = stima_kdiscreti(kspan,window,K0_disc,options)
 %
 %   Per ogni punto di kspan integro su una finestra, dove i parametri sono
 %   descritti nella struttura window, e ricavo il valore del parametro di controllo k.
@@ -17,11 +17,10 @@ function [days, k_c]=stima_Lock(kspan,window,k0_c,options)
 %   OUTPUTS:
 %   iter       : numero di iterazioni fatte nel ciclo for
 %                (corrisponde con length(kspan) - kr*h)
-%   days       : il giorno days(i) corrisponde al k_c(i) parametro trovato
-%   k_c        : parametri discreti trovati per ogni punto di kpsan
+%   days       : il giorno days(i) corrisponde al K_disc(i) parametro trovato
+%   K_disc        : parametri discreti trovati per ogni punto di kpsan
 %
 %
-
 
 global t_u t_c tl tr tspan tm ym x0 pnt Ibar Rbar Nass
 
@@ -29,15 +28,13 @@ h = window.h;
 kl = window.kl;
 kr = window.kr;
 
-pnt = 1;        % default
-if (nargin == 4) 
-  if (isfield(options,'pnt'))   % aggiungo nodi per migliore risoluzione minquad
-    pnt = options.pnt;
-  end
+% aggiungo nodi per migliore risoluzione minquad
+if (nargin == 3)
+  pnt = 1;
 end
 
 days = zeros(t_c-kr*h-t_u,1);
-k_c  = zeros(t_c-kr*h-t_u,1);
+K_disc  = zeros(t_c-kr*h-t_u,1);
 
 it = 1;
 
@@ -60,13 +57,13 @@ for t_i=kspan
                                 % x0 serve per fmincon(problem), dentro risolvo una ode
     
     % Minimizzazione: nella finestrella di 7 giorni centrata in t_i cerchiamo
-    % il parametro k_c di controllo
+    % il parametro K_disc di controllo
 
     problem.options = optimoptions('fmincon','Display','iter');
     %problem.options = optimoptions('fmincon');
     problem.solver = 'fmincon';
     problem.objective = @minquad_kdiscreti;     % funzionale obiettivo minimizzare
-    problem.x0 = k0_c;                          % guess iniziale min
+    problem.x0 = K0_disc;                          % guess iniziale min
     problem.lb = 0;                             % lower bound
     problem.nonlcon = @(K)mycon(K);             % vincolo non lineare su k (=beta>0)
     
@@ -81,9 +78,9 @@ for t_i=kspan
      
     % salvo giorno e parametro ottenuto
     days(it) = t_i;
-    k_c(it) = fmincon(problem);     % salvo il parametro ottenuto
+    K_disc(it) = fmincon(problem);     % salvo il parametro ottenuto
     
-    k0_c = k_c(it);                 % update guess iniziale
+    K0_disc = K_disc(it);                 % update guess iniziale
     it = it+1;                      % update iterazioni
 end
 
@@ -94,7 +91,7 @@ end
 
 function [c,ceq] = mycon(K)
 
-global x0 beta gamma tspan Nass tl tr
+global x0 beta gamma tl tr Nass
     
     SI = @(t,x) [-(beta - x(1)*x(2)/K)*x(1)*x(2);
                   (beta - x(1)*x(2)/K)*x(1)*x(2) - gamma*x(2)];
@@ -103,11 +100,9 @@ global x0 beta gamma tspan Nass tl tr
                     beta*x(2) - 2*x(1)*(x(2)^2)/K,  beta*x(1) - 2*(x(1)^2)*x(2)/K - gamma];
     options.Jacobian = Jac;
     
-    tt = linspace(tl,tr,11);
-    [t, xm]  = eulerorosenbrock(SI,tt,x0,options);
-    
-    %[t, xm]  = eulerorosenbrock(SI,tspan,x0,options);
-    
+    nstep = 11;
+    [t, xm]  = eulerorosenbrock(SI,linspace(tl,tr,nstep),x0,options);
+        
     %xm(:,3) = ones(length(t),1) - xm(:,1) - xm(:,2);      % ricavo R per post-processing
     %xm = Nass.*xm;                                       % ???
     

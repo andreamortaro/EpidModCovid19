@@ -58,7 +58,7 @@ end
 
 problem.options     = optimoptions('fmincon','Display','iter');
 problem.solver      = 'fmincon';
-problem.objective   = @minquad;
+problem.objective   = @minquad_prelock;
 problem.x0          = K0;
 problem.lb          = [0,0];
 
@@ -86,24 +86,32 @@ if ffig == 1
         'defaultLegendInterpreter','latex');
     
     fig = figure();
-    plot(t,x(:,2),'SeriesIndex',1);
-    hold on
-    plot(t,x(:,3),'SeriesIndex',2);
-    plot(tm,Ibar(tm+1),'o',...
-        'MarkerSize',3,...
-        'MarkerEdgeColor','blue',...
-        'MarkerFaceColor',[1 .6 .6]);
-    plot(tm,Rbar(tm+1),'o',...
-        'MarkerSize',3,...
+    p1 = plot(tm,Ibar(tm+1),'o',...
+        'MarkerSize',4,...
         'MarkerEdgeColor','red',...
-        'MarkerFaceColor',[1 .6 .6]);
+        'MarkerFaceColor',[1 .6 .6]);        
 
+    hold on
+    p2 = plot(tm,Rbar(tm+1),'o',...
+        'MarkerSize',4,...
+        'MarkerEdgeColor',[.3 .4 .6],...
+        'MarkerFaceColor',[.3 .6 .8]);
+    
+    p3 = plot(t,x(:,2),'SeriesIndex',2,'Linewidth',2.5);
+    %p3 = plot(t,x(:,2),'color','black','Linewidth',2.5);
+
+    hold on
+    p4 = plot(t,x(:,3),'SeriesIndex',1,'Linewidth',2.5);
+    
+    p3.Color(4) = 0.6;
+    p4.Color(4) = 0.6;
+    
     ax = gca;
     ax.XTick = 0:7:14;
     ax.XTickLabel = date((0:7:14)+1);
     ax.XTickLabelRotation = 45;
     box on
-    legend('I','R','$I_{bar}$','$R_{bar}$','Location','NorthWest');
+    legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
     ylabel('casi confermati');
     set(gca,'FontSize',12.5)
     

@@ -42,7 +42,7 @@ data(2).time = t_u;
 data(3).time = t_c;
 data(4).time = date;
 
-%% Pre-Lockdown
+%% Pre-Lockdown [t_0,t_u]: stima beta e gamma prima del Lockdown
 
 % controlo immagini e figure
 options.ssens = 0;      % analisi sensitività
@@ -50,7 +50,7 @@ options.ffig  = 1;      % stampare figure
 options.ssave = 1;      % salvare immagine
 
 options.pnt   = 5;      % piu nodi per migliore risoluzione sistema minquad
-K0  = [0.5,0.1];        % guess iniziale ottimizzazione per [beta,gamma]
+K0  = [0.4,0.1];        % guess iniziale ottimizzazione per [beta,gamma]
 
 [tpl, xpl, beta, gamma] = prelock(data, K0, options);
 
@@ -58,11 +58,14 @@ K0  = [0.5,0.1];        % guess iniziale ottimizzazione per [beta,gamma]
 data(1).parameters = beta;
 data(2).parameters = gamma;
 
+R_0 = beta/gamma;
+table(beta,gamma,R_0)
+
 if lock == 0
     return
 else
     clear options   % ripulisco il settaggio figure
-end    
+end
 
 %% Lockdown
 
@@ -100,14 +103,14 @@ fig = figure();
 
 tt = [tpl;tl]'; ii = [xpl(:,2);xl(:,2)]';
 
-plot(t_0:t_c,Ibar,'o',...
+p1 = plot(t_0:t_c,Ibar,'o',...
     'MarkerSize',4,...
     'MarkerEdgeColor','red',...
-    'MarkerFaceColor',[1 .6 .6])
+    'MarkerFaceColor',[1 .6 .6]);
 
 hold on
-%plot(tt,ii,'SeriesIndex',3,'Linewidth',2)
-plot(tt,ii,'Linewidth',2.5,'color',[0 0 0]+0.3)
+p2 = plot(tt,ii,'Linewidth',2.5,'color','black');
+p2.Color(4) = 0.6;
 
 ax = gca;
 ax.XTick = [t_0,t_u,37,67,t_c];
@@ -117,7 +120,7 @@ xline(t_u,':','inizio Lockdown')
 %ylim([0 3e5])
 
 box on
-legend('I','$I_{bar}$','Location','Best');
+legend([p1,p2],'$I_{bar}$','I','Location','Best');
 ylabel('casi confermati');
 set(gca,'FontSize',12.5)
 

@@ -1,5 +1,3 @@
-%% PARTE 2 : Fitto i k_c discreti ottenuti e ricavo k(t)
-
 function A = fitting_k(A0,days,k_c)
 
 %
@@ -22,7 +20,7 @@ problem2.options    = optimoptions('fmincon','Display','iter');
 problem2.solver     = 'fmincon';
 problem2.objective  = @minquad_kcontinuo;           % funzionale obiettivo minimizzare
 problem2.x0         = [a,b,c];                      % guess iniziale
-%problem2.nonlcon = @(A)mycon(A);                  % vincolo non lineare su k (=beta>0)
+%problem2.nonlcon = @(A)mycon_discreto(A);                  % vincolo non lineare su k (=beta>0)
 
 % tecnicamente dovrei imporre il vinc non lin, tuttavia
 %l'ho imposto quando ho cercato i k discreti ???
@@ -34,7 +32,7 @@ end
 % VINCOLO NON LINEARE SU K Quando voglio fittarei k discreti con una
 % function k(t) continua
 
-function [c,ceq] = mycon(A)
+function [c,ceq] = mycon_discreto(A)
 
 global x0 beta gamma t_u t_c Ibar Rbar Nass
 

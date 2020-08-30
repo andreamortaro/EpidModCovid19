@@ -34,7 +34,7 @@ if (nargin == 3)
   pnt = 1;
 end
 
-days = zeros(t_c-kr*h-t_u,1);
+days    = zeros(t_c-kr*h-t_u,1);
 K_disc  = zeros(t_c-kr*h-t_u,1);
 
 it = 1;
