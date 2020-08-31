@@ -15,7 +15,7 @@ function L = minquad_kcontinuo(A)     % funzionale da minimizzare
 global days K_disc regione
 
 switch regione
-    case {'Veneto','Emilia-Romagna','Piemonte'}
+    case {'Veneto','Emilia-Romagna','Lombardia'}
         K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
     otherwise
         K = @(t) -A(1)*t^2 + A(2)*t - A(3);

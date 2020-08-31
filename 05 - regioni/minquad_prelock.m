@@ -16,14 +16,17 @@ global  t_0 t_u tm ym x0 Nass pnt
 
 SI = @(t,x) [-K(1)*x(1)*x(2); K(1)*x(1)*x(2) - K(2)*x(2)]; % riscrivo sys con K
 
-% Jac = @(t,x) [-K(1)*x(2), -K(1)*x(2);
-%                K(1)*x(2),  K(1)*x(1) -  K(2)];
-% options.Jacobian = Jac;
-% [t, xm]  = eulerorosenbrock(SI,tspan,x0,options);
+Jac = @(t,x) [-K(1)*x(2), -K(1)*x(2);
+               K(1)*x(2),  K(1)*x(1) -  K(2)];
+options.Jacobian = Jac;
 
-% difficile da controllare i tempi della soluzione
-options.InitialStep = 1/pnt;    % così t(pnt*tm+1) deve coincidere con tm
-[t, xm]  = rk4(SI,[t_0 t_u],x0,options);
+nstep = pnt*t_u+1;
+tspan = linspace(t_0,t_u,nstep);
+[t, xm]  = eulerorosenbrock(SI,tspan,x0,options);
+
+% % difficile da controllare i tempi della soluzione
+% options.InitialStep = 1/pnt;    % così t(pnt*tm+1) deve coincidere con tm
+% [t, xm]  = rk4(SI,[t_0 t_u],x0,options);
 
 if tm' ~= t(pnt*(tm-t_0)+1)     % devono coincidere
     warning("stai minimizzando nei punti sbagliati")

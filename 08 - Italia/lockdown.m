@@ -1,4 +1,4 @@
-function [t,x,A] = lockdown(data, K0_disc, K0_cont, options)
+function [t,x,days,K_disc,A] = lockdown(data, K0_disc, K0_cont, options)
 
 %
 %   [t,x,A] = lockdown(data, K0_disc, kguess, otpions)
@@ -71,8 +71,6 @@ end
 % per comodità, procedura per i K_disc discreti su kspan su un file a parte
 [days, K_disc] = stima_kdiscreti(kspan,window,K0_disc,pnt);
 
-T = table(days,K_disc,'VariableNames',{'t_i' 'K_disc(t_i)'}) %#ok<NOPRT>
-
 %% 2. Fitto i K_disc discreti ottenuti e ricavo k(t)
 
 problem2.options    = optimoptions('fmincon','Display','iter');
@@ -86,8 +84,18 @@ problem2.x0         = K0_cont;                      % guess iniziale
 
 A = fmincon(problem2);
 
+
+
 % update function
-Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);
+switch t_c
+    case 127    % t_c Jun 30
+        Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);  % guassiana
+    case 188
+        Kfun = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^2;
+%         Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);  % guassiana
+    otherwise
+        Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);
+end
 
 if ffig == 1
     
@@ -116,7 +124,7 @@ if ffig == 1
     ax.XTick = [t_u,37,67,t_c];
     ax.XTickLabel = date([t_u,37,67,t_c]+1);
     ax.XTickLabelRotation = 45;
-    
+   
     if ssave == 1
         exportgraphics(fitting,'figure/fittingk.pdf','ContentType','vector',...
                        'BackgroundColor','none')
@@ -158,6 +166,8 @@ if ffig == 1
     tt = t_u:1:t_c;
     
     fig = figure();
+    ax_fig = axes;
+    
     p1 = plot(tt,Ibar(tt+1),'o',...
         'MarkerSize',4,...
         'MarkerEdgeColor','red',...
@@ -170,7 +180,6 @@ if ffig == 1
         'MarkerFaceColor',[.3 .6 .8]);
 
     p3 = plot(t,x(:,2),'SeriesIndex',2,'LineWidth',2.5);
-    %p3 = plot(t,x(:,2),'color','black','LineWidth',2.5);
 
     p4 = plot(t,x(:,3),'SeriesIndex',1,'LineWidth',2.5);    
     p3.Color(4) = 0.6;
@@ -183,10 +192,50 @@ if ffig == 1
 
     box on
     legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
+    ylabel('casi confermati');
+    title('Italia');
+        
+    fig_xlim = get(gca,'XLim');
+    
+	set(gca,'FontSize',12.5);
 
+    ax_fig.XLim = fig_xlim;
+    ax_fig.YLim = [0 3.5e5];
+    
+    p = get(gca, 'Position');
+    h = axes('Parent',gcf,'Position', [p(1)+.46 p(2)+.46 p(3)-.5 p(4)-.5],'box','on');
+
+    hold(h,'on')
+    
+    %%% INSERISCO LA CURVA K
+    
+    % imposto latex come inteprete per i grafici
+    set(groot,...
+        'defaulttextinterpreter','latex',...
+        'defaultAxesTickLabelInterpreter','latex',...
+        'defaultLegendInterpreter','latex');
+
+    set(gca,'FontSize',8);
+    
+    tt = linspace(t_u,t_c,50);
+    plot(days,K_disc,'o',...
+            'MarkerSize',3,...
+            'MarkerEdgeColor',[.5 .7 .1],...
+            'MarkerFaceColor',[.8 .9 0]);
+    
+    hold on
+    p2 = plot(tt,Kfun(tt'),'black','LineWidth',2);
+    p2.Color(4) = 0.7;
+    ylabel("$\kappa$")
+
+    ax = gca;
+    ax.XTick = [t_u,37,67,t_c];
+    ax.XTickLabel = date([t_u,37,67,t_c]+1);
+    ax.XTickLabelRotation = 45;
+        
     if ssave == 1
-        exportgraphics(fig,'figure/italia_lockdown.pdf','ContentType','vector',...
-                       'BackgroundColor','none')
+        exportgraphics(fig,['figure/italia_lockdown' num2str(date(t_c+1)) '.pdf'],...
+                       'BackgroundColor','none');
     end
 end
 
@@ -199,7 +248,15 @@ function [c,ceq] = mycon(A)
 
 global x0 beta gamma t_u t_c Ibar Rbar Nass
 
-    Kfun = @(t) A(1)*exp(A(2)*t).*(1-exp(A(3)*t));
+    switch t_c
+        case 127    % t_c Jun 30
+            Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);  % guassiana
+        case 188
+            Kfun = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^2;
+%             Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);  % guassiana
+        otherwise
+            Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);
+    end
     
     SI = @(t,x) [-(beta - x(1)*x(2)/Kfun(t))*x(1)*x(2);
                   (beta - x(1)*x(2)/Kfun(t))*x(1)*x(2) - gamma*x(2)];

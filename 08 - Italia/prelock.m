@@ -112,11 +112,12 @@ if ffig == 1
     ax.XTickLabelRotation = 45;
     box on
     legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
+    title('Italia');
     ylabel('casi confermati');
     set(gca,'FontSize',12.5)
     
     if ssave == 1
-        exportgraphics(fig,'figure/italia-preLock.pdf','ContentType','vector',...
+        exportgraphics(fig,'figure/italia_prelock.pdf','ContentType','vector',...
                        'BackgroundColor','none')
     end
 end

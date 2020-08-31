@@ -12,7 +12,9 @@ lock      = 1;
 riepilogo = 1;
 
 % Upload dati protezione civile
-tmp = fullfile('..','00 - dpc_data','2020-05-22','dati-regioni');
+%tmp = fullfile('..','00 - dpc_data','2020-05-22','dati-regioni');
+tmp = fullfile('..','00 - dpc_data','2020-06-30','dati-regioni');
+
 [status,result] = fileattrib(tmp);
 path_folder = result.Name;              % percorso alla cartella
 [reg_label,date,Ibar_allreg,Rbar_allreg] = data_read_dpc_regioni(path_folder);
@@ -96,9 +98,9 @@ options.pnt = 10;          % aumento numero nodi
 % 2. Fitto i k discreti ottenuti e ricavo k(t)
 
 switch regione
-    case 'Veneto'
+    case {'Veneto','Lombardia'}
         a = 1e-2; b = 45; c = 37;           % fitting gaussiana
-    case {'Emilia-Romagna','Piemonte'}
+    case 'Emilia-Romagna'
         a = 1e-3; b = 50; c = 30;
     otherwise
         a = 1e-6; b = 1e-4; c = 1e-3;       % fitting polinomiale
@@ -159,7 +161,7 @@ set(groot,...
 
 if ssave == 1
         exportgraphics(fig,...
-                       ['figure/' char(regione) '_riepilogo' num2str(date(t_c+1)) '.pdf'],...
+                       ['figure/' char(regione) '/riepilogo' num2str(date(t_c+1)) '.pdf'],...
                         'ContentType','vector',...
                         'BackgroundColor','none')
 end

@@ -99,7 +99,7 @@ if ffig == 1
     set(gca,'Ylim',[0 limsy(2)]);
 
     if ssave == 1
-    exportgraphics(fig,'figure/' + regione + '_preLock.pdf','ContentType','vector',...
+    exportgraphics(fig,'figure/' + regione + '/prelock.pdf','ContentType','vector',...
                    'BackgroundColor','none')
     end
 end

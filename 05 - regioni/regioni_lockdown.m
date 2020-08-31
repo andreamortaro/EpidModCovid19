@@ -76,7 +76,7 @@ A = fmincon(problem2);
 
 % update function
 switch regione
-    case {'Veneto','Emilia-Romagna','Piemonte'}
+    case {'Veneto','Emilia-Romagna','Lombardia'}
         Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
     otherwise
         Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);
@@ -111,10 +111,10 @@ if ffig == 1
     ax.XTickLabel = date([t_u,37,67,t_c]+1);
     ax.XTickLabelRotation = 45;
     
-    title(char(regione),'FontSize',13);
+    title(char(regione));
 
     if ssave == 1
-        exportgraphics(fitting,'figure/' + regione + '_fittingk.pdf',...
+        exportgraphics(fitting,'figure/' + regione + '/fittingk.pdf',...
                        'ContentType','vector',...
                        'BackgroundColor','none')
     end
@@ -156,6 +156,8 @@ if ffig == 1
     tt = t_u:1:t_c;
     
     fig = figure();
+    ax_fig = axes;
+
     p1 = plot(tt,Ibar(tt+1),'o',...
         'MarkerSize',4,...
         'MarkerEdgeColor','red',...
@@ -181,11 +183,60 @@ if ffig == 1
 
     box on
     legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
+    ylabel('casi confermati');
 
-    title(char(regione),'FontSize',13);
+    title(char(regione));
+    
+    fig_xlim = get(gca,'XLim');
+    
+	set(gca,'FontSize',12.5);
 
+    ax_fig.XLim = fig_xlim;
+    switch regione
+        case 'Veneto'
+            switch t_c
+                case 87
+                    ax_fig.YLim = [0 2e4];
+            end
+        case 'Lombardia'
+            switch t_c
+                case 87
+                    ax_fig.YLim = [0 10e4];
+            end
+        case 'Emilia-Romagna'
+            switch t_c
+                case 87
+                    ax_fig.YLim = [0 3e4];
+            end
+    end
+    
+    p = get(gca, 'Position');
+    h = axes('Parent',gcf,'Position', [p(1)+.46 p(2)+.46 p(3)-.5 p(4)-.5],'box','on');
+
+    hold(h,'on')
+    
+    %%% INSERISCO LA CURVA K
+
+    tt = linspace(t_u,t_c,50);
+    plot(days,K_disc,'o',...
+            'MarkerSize',4,...
+            'MarkerEdgeColor',[.5 .7 .1],...
+            'MarkerFaceColor',[.8 .9 0]);
+
+    set(gca,'FontSize',8);
+
+    hold on
+    p2 = plot(tt,Kfun(tt'),'black','LineWidth',2.5);
+    p2.Color(4) = 0.7;
+    %text(14,max(K_disc)*.75,["a= " num2str(A(1)) "b= " num2str(A(2)) "c= " num2str(A(3)) ])
+    ylabel("$\kappa$")
+
+    ax = gca;
+    ax.XTick = [t_u,37,67,t_c];
+    ax.XTickLabel = date([t_u,37,67,t_c]+1);
+    ax.XTickLabelRotation = 45;
     if ssave == 1
-        exportgraphics(fig,['figure/' char(regione) '_lockdown.pdf'],...
+        exportgraphics(fig,['figure/' char(regione) '/lockdown'  num2str(date(t_c+1)) '.pdf'],...
                        'ContentType','vector',...
                        'BackgroundColor','none')
     end
@@ -201,7 +252,7 @@ function [c,ceq] = mycon(A)
 global x0 beta gamma t_u t_c Ibar Rbar Nass regione
 
     switch regione
-        case {'Veneto','Emilia-Romagna','Piemonte'}
+        case {'Veneto','Emilia-Romagna','Lombardia'}
             Kfun = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
         otherwise
             Kfun = @(t) -A(1)*t.^2 + A(2)*t - A(3);

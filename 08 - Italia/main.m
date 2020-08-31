@@ -14,8 +14,9 @@ riepilogo = 1;
 %% DATI
 
 % Upload dati protezione civile
-tmp = fullfile('..','00 - dpc_data','2020-05-22','dati-andamento-nazionale');
-%tmp = fullfile('..','00 - dpc_data','2020-06-30','dati-andamento-nazionale');
+%tmp = fullfile('..','00 - dpc_data','2020-05-22','dati-andamento-nazionale');
+tmp = fullfile('..','00 - dpc_data','2020-06-30','dati-andamento-nazionale');
+%tmp = fullfile('..','00 - dpc_data','2020-08-31','dati-andamento-nazionale');
 
 [status,result]     = fileattrib(tmp);
 path_folder         = result.Name;                  % percorso alla cartella
@@ -80,14 +81,25 @@ K0_disc	= 1e-5;         % guess iniziale
 options.pnt	= 100;      % aumento numero nodi integrazione
 
 % 2. Fitto i k discreti ottenuti e ricavo k(t)
-a = 1e-6; b = 1e-4; c = 1e-3;       % fitting polinomiale
+
+switch t_c
+    case 127    % Jun 30
+        a = 1e-4; b = 55; c = 40;           % fitting gaussiana
+    case 188    % Aug 31
+        a = 30; b = 0.05; c = 1e-3;         % fitting esponenziale
+%         a = 5e-3; b = 55; c = 43;         % fitting gauss
+    otherwise
+        a = 1e-6; b = 1e-4; c = 1e-3;       % fitting polinomiale
+end
+
 K0_cont = [a,b,c];                  % guess iniziale
+
 
 % 3. Simulazione modello oltre il lockdown
 options.deltatc = 10;
 
 % simulazione modello durante lockdown e fitting dei k discreti
-[tl,xl,A] = lockdown(data, K0_disc, K0_cont, options);
+[tl,xl,days,K_disc,A] = lockdown(data, K0_disc, K0_cont, options);
 
 if riepilogo == 0
     return
@@ -122,6 +134,7 @@ xline(t_u,':','inizio Lockdown')
 box on
 legend([p1,p2],'$I_{bar}$','I','Location','Best');
 ylabel('casi confermati');
+title('Italia');
 set(gca,'FontSize',12.5)
 
 % imposto latex come inteprete per i grafici

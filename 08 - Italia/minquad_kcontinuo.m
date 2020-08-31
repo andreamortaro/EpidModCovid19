@@ -12,9 +12,17 @@ function L = minquad_kcontinuo(A)     % funzionale da minimizzare
 %   L       : funzione minimi quadrati
 %
 
-global days K_disc
+global days K_disc t_c
 
-K = @(t) -A(1)*t^2 + A(2)*t - A(3);
+switch t_c
+    case 127
+        K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    case 188
+        K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^2;
+%         K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    otherwise
+        K = @(t) -A(1)*t^2 + A(2)*t - A(3);
+end
 
 
 % Calcolo numericamente la funzione dei minimi quadrati L
