@@ -7,7 +7,9 @@ function [t,x,beta,gamma] = stima_beta_gamma(data,K0,pnt)
 %   e simulazione del modello
 %
 %   INPUTS:
-%   data        : struttura che contiene i dati utili come Ibar e Rbar
+%   data        : struttura che contiene i dati utili come Ibar e Rbar.
+%                 Contiene data.prelock che sono gli estremi
+%                 dell'intervallo temporale durante il quale risolvo il problema.
 %   K0          : guess ottimizzazione per trovare beta-gamma.
 %
 %   OUTPUTS:

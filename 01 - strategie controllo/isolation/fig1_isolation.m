@@ -4,6 +4,8 @@ clc
 close all
 clear all
 
+ssave = 1;
+
 % discretizzazione temporale:
 T       = 20;                       % tempo finale
 ntot    = 500;                      % numero di nodi
@@ -27,6 +29,8 @@ options.InitialStep = dt;
 t1=0;                % inizio controllo
 t2=T;                % fine controllo
 
+t1_hist{1} = t1;
+
 SIR = @(t,x) [-beta*x(1)*x(2);
                beta*x(1)*x(2)-mu*x(2)-alfa*x(2)*(t>=t1 & t<=t2)];
 
@@ -42,6 +46,8 @@ scalino1(tsol1>=t1 & tsol1<=t2) = u_max;
 %sovrascrivo i t1,t2
 t1=1;                % inizio controllo
 t2=T;                % fine controllo
+
+t1_hist{2} = t1;
 
 SIR = @(t,x) [-beta*x(1)*x(2);
                beta*x(1)*x(2)-mu*x(2)-alfa*x(2)*(t>=t1 & t<=t2)];
@@ -60,6 +66,8 @@ scalino2(tsol2>=t1 & tsol2<=t2) = u_max;
 t1=4;                % inizio controllo
 t2=T;                % fine controllo
 
+t1_hist{3} = t1;
+
 SIR = @(t,x) [-beta*x(1)*x(2);
                beta*x(1)*x(2)-mu*x(2)-alfa*x(2)*(t>=t1 & t<=t2)];
 
@@ -76,6 +84,8 @@ scalino3(tsol3>=t1 & tsol3<=t2) = u_max;
 %sovrascrivo i t1,t2
 t1=10;               % inizio controllo
 t2=T;                % fine controllo
+
+t1_hist{4} = t1;
 
 SIR = @(t,x) [-beta*x(1)*x(2);
                beta*x(1)*x(2)-mu*x(2)-alfa*x(2)*(t>=t1 & t<=t2)];
@@ -100,6 +110,7 @@ for i =1:4
     xsol = xsol_all{i};
     xs = xs_all{i};
     ys = ys_all{i};
+    t1 = t1_hist{i};
 
     % imposto latex come inteprete per i grafici
     set(groot,...
@@ -107,19 +118,31 @@ for i =1:4
         'defaultAxesTickLabelInterpreter','latex',...
         'defaultLegendInterpreter','latex');
     
-    ffont = 14;
     
     fig = figure();
-    hax = plotyy(tsol, xsol(:,2),xs,ys);
-    set(hax,'xcolor','k','ycolor','k','ylim',[0,N])
-    set(hax(1), 'YTick',0:20:100)
-    set(hax(2), 'YTick',[0,u_max], 'YTickLabel',{'0','$u^{max}$'},'FontSize',ffont)
+%     hax = plotyy(tsol, xsol(:,2),xs,ys);
+%     set(hax,'xcolor','k','ycolor','k','ylim',[0,N])
+%     set(hax(1), 'YTick',0:20:100)
+%     ffont = 14;
+%     set(hax(2), 'YTick',[0,u_max], 'YTickLabel',{'0','$u^{max}$'},'FontSize',ffont)
+    plot(tsol,xsol(:,2),'SeriesIndex',1,'LineWidth',1.5)
+    xline(t1,':','attivazione','LineWidth',1.5);
+    H = get(fig,'CurrentAxes'); set(H,'YTickLabel',{})
+    if t1 > 5
+        set(H,'XTick',[0,5,t1,15,T],'XTickLabel',{'','','$\tau^{*}$','',''})
+    elseif t1 > 0 && t1 <5
+        set(H,'XTick',[0,t1,5,10,15,T],'XTickLabel',{'','$\tau^{*}$','','','',''})
+    elseif t1 == 5
+        set(H,'XTick',[0,t1,10,15,T],'XTickLabel',{'','$\tau^{*}$','','',''})
+    elseif t1 == 0
+        set(H,'XTick',[t1,5,10,15,T],'XTickLabel',{'$\tau^{*}$','','','',''})
+    end
     axis([0 T 0 N]);
     xlabel("t");
-    ylabel("I(t)");
+    ylabel("Infetti I(t)");
     grid on
 
-    set(gca,'FontSize',ffont)
+    set(gca,'FontSize',12.5)
     exportgraphics(fig,['subplot' num2str(i) '.pdf'],'ContentType','vector',...
                    'BackgroundColor','none');
 end

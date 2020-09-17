@@ -27,12 +27,16 @@ function [t, x, beta, gamma] = prelock(data, K0, options)
 if nargin == 2
     ffig = 1;
     ssave = 1;
+    prelockopt =1;
 else
     if isfield(options,'ffig')
         ffig = options.ffig;
     end
     if isfield(options,'ssave')
         ssave = options.ssave;
+    end
+    if isfield(options,'prelockopt')
+        prelockopt = options.prelockopt;
     end 
 end
 
@@ -52,31 +56,46 @@ if(nargin==3)
     pnt = options.pnt;
 end
 
-%% primo intervallo [t_0,t_1]
+%% ottimizzazione per beta e gamma
 
-data(1).prelock = t_0;
-data(2).prelock = t_1;
+switch prelockopt
+    case 0
+        
+        data(1).prelock = t_0;  % tstart
+        data(2).prelock = t_u;  % tfinal
+        
+        [~,~,beta,gamma] = stima_beta_gamma(data,K0,pnt);
+        % non conviene salvarsi la simulazione con tali beta e gamma, lo
+        % faccio sotto.
+        
+    case 1 % divisa in due fasi nel periodo prelock
+        
+        % primo intervallo [t_0,t_1]
 
-[t1,x1,beta1,gamma1] = stima_beta_gamma(data,K0,pnt);
+        data(1).prelock = t_0;
+        data(2).prelock = t_1;
 
-%% secondo intervallo [t_1,t_u]
+        [t1,x1,beta1,gamma1] = stima_beta_gamma(data,K0,pnt);
 
-data(1).prelock = t_1+1;
-data(2).prelock = t_u;
+        % secondo intervallo [t_1,t_u]
 
-[t2,x2,beta2,gamma2] = stima_beta_gamma(data,K0,pnt);
+        data(1).prelock = t_1+1;
+        data(2).prelock = t_u;
+
+        [t2,x2,beta2,gamma2] = stima_beta_gamma(data,K0,pnt);
+
+        R0_1 = beta1/gamma1
+        R0_2 = beta2/gamma2
+
+        tmp1 = length(t_0:1:t_1);
+        tmp2 = length(data(1).prelock:1:t_u);
+        tmp3 = length(t_0:1:t_u);
+
+        beta = (beta1*tmp1 + beta2*tmp2)/tmp3;
+        gamma = (gamma1*tmp1 + gamma2*tmp2)/tmp3;
+end
 
 %% simulazione
-
-R0_1 = beta1/gamma1
-R0_2 = beta2/gamma2
-
-tmp1 = length(t_0:1:t_1);
-tmp2 = length(t_1+1:1:t_u);
-tmp3 = length(t_0:1:t_u);
-
-beta = (beta1*tmp1 + beta2*tmp2)/tmp3;
-gamma = (gamma1*tmp1 + gamma2*tmp2)/tmp3;
 
 % update sys, nuovi parametri trovati
 SI = @(t,x) [-beta*x(1)*x(2); beta*x(1)*x(2) - gamma*x(2)];
@@ -84,7 +103,7 @@ SI = @(t,x) [-beta*x(1)*x(2); beta*x(1)*x(2) - gamma*x(2)];
 Jac = @(t,x) [-beta*x(2), -beta*x(2);
                beta*x(2), beta*x(1) - gamma];
 opt.Jacobian = Jac;
-opt.InitialStep = 0.001;
+opt.InitialStep = 0.01;
 I0 = Ibar(t_0+1); R0 = Rbar(t_0+1); S0 = Nass-I0-R0;
 x0 = [S0;I0]/Nass;                           % dato iniziale in percentuale
 
@@ -115,18 +134,16 @@ if ffig == 1
         'MarkerEdgeColor',[.3 .4 .6],...
         'MarkerFaceColor',[.3 .6 .8]);
     
-    p3 = plot(t,x(:,2),'SeriesIndex',2,'Linewidth',2.5);
-
+    p3 = plot(t,x(:,2),'SeriesIndex',2,'Linewidth',2.5); p3.Color(4) = 0.6;
     hold on
-    p4 = plot(t,x(:,3),'SeriesIndex',1,'Linewidth',2.5);
+    p4 = plot(t,x(:,3),'SeriesIndex',1,'Linewidth',2.5); p4.Color(4) = 0.6;
     
-    p5 = plot(t1,x1(:,2),'SeriesIndex',4,'Linewidth',2.5); p5.Color(4) = 0.6;
-    p6 = plot(t1,x1(:,3),'SeriesIndex',3,'Linewidth',2.5); p6.Color(4) = 0.6;
-    p7 = plot(t2,x2(:,2),'SeriesIndex',4,'Linewidth',2.5); p7.Color(4) = 0.6;
-    p8 = plot(t2,x2(:,3),'SeriesIndex',3,'Linewidth',2.5); p8.Color(4) = 0.6;
-    
-    p3.Color(4) = 0.6;
-    p4.Color(4) = 0.6;
+    if prelockopt == 1
+        p5 = plot(t1,x1(:,2),'SeriesIndex',4,'Linewidth',2.5); p5.Color(4) = 0.6;
+        p6 = plot(t1,x1(:,3),'SeriesIndex',3,'Linewidth',2.5); p6.Color(4) = 0.6;
+        p7 = plot(t2,x2(:,2),'SeriesIndex',4,'Linewidth',2.5); p7.Color(4) = 0.6;
+        p8 = plot(t2,x2(:,3),'SeriesIndex',3,'Linewidth',2.5); p8.Color(4) = 0.6;
+    end
     
     ax = gca;
     ax.XTick = 0:7:14;
@@ -150,7 +167,7 @@ if ffig == 1
             exportgraphics(fig,'figure/' + regione + '/prelock.pdf','ContentType','vector',...
             'BackgroundColor','none')
         else
-            exportgraphics(fig,'figure/italia_prelock.pdf','ContentType','vector',...
+            exportgraphics(fig,'figure/Italia/prelock.pdf','ContentType','vector',...
             'BackgroundColor','none')
         end
     end
@@ -179,9 +196,15 @@ if ssens == 1
     D = odesol(sensys,t,D0);
 
     fig2 = figure();
-    plot(t,D(:,1),t,D(:,2),t,D(:,3),t,D(:,4),t,D(:,5),t,D(:,6))
+    p1 = plot(t,D(:,1),'Linewidth',1.5);
+    hold on
+    p2 = plot(t,D(:,2),'Linewidth',1.5);
+    p3 = plot(t,D(:,3),'Linewidth',1.5);
+    p4 = plot(t,D(:,4),'Linewidth',1.5);
+    p5 = plot(t,D(:,5),'Linewidth',1.5);
+    p6 = plot(t,D(:,6),'Linewidth',1.5);
     %title('Sensitivity')
-    H=legend('$\partial_{\beta}S$','$\partial_{\gamma}S$',...
+    H=legend([p1,p2,p3,p4,p5,p6],'$\partial_{\beta}S$','$\partial_{\gamma}S$',...
              '$\partial_{\beta}I$','$\partial_{\gamma}I$',...
              '$\partial_{\beta}R$','$\partial_{\gamma}R$');
     set(H,'Location','Best',...
@@ -190,10 +213,10 @@ if ssens == 1
     axis tight
     grid on
     xlabel('t')
-    set(gca,'FontSize',12.5)
     
+    set(gca,'FontSize',12.5)
     if ssave == 1
-        exportgraphics(fig2,'figure/sensitivita.pdf','ContentType','vector',...
+        exportgraphics(fig2,'figure/Italia/sensitivita.pdf','ContentType','vector',...
                        'BackgroundColor','none')
     end
                

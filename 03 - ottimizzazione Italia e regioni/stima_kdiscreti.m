@@ -72,13 +72,13 @@ for t_i=kspan
     problem.nonlcon = @(K)mycon(K);             % vincolo non lineare su k (=beta>0)
     
     % %prove
-    %problem.OptimalityTolerance = 1e-12;
-    %problem.StepTolerance = 1e-12;
-    %problem.FunctionTolerance = 1e-12;
-    %problem.ConstraintTolerance = 1e-12;
+    problem.OptimalityTolerance = 1e-24;
+    problem.StepTolerance = 1e-24;
+    problem.FunctionTolerance = 1e-24;
+    problem.ConstraintTolerance = 1e-3;
     %problem.Algorithm = 'active-set';
-    %problem.MaxFunctionEvaluations = 5000; %max per fmincon con punto interno 3000
-    %problem.MaxIterations = 1500;
+    problem.MaxFunctionEvaluations = 10000; %max per fmincon con punto interno 3000
+    problem.MaxIterations = 2000;
 
     % salvo giorno e parametro ottenuto
     days(it) = t_i;
@@ -104,7 +104,7 @@ global x0 beta gamma tl tr
                     beta*x(2) - 2*x(1)*(x(2)^2)/K,  beta*x(1) - 2*(x(1)^2)*x(2)/K - gamma];
     options.Jacobian = Jac;
     
-    nstep = 11;
+    nstep = 5*(tr-tl)+1;
     [~, xm]  = eulerorosenbrock(SI,linspace(tl,tr,nstep),x0,options);
 
     % controllo la condizione con i valori in percentuale, altrimenti e'

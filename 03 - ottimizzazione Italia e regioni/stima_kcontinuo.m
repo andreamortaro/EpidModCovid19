@@ -16,7 +16,7 @@ function [K,A] = stima_kcontinuo(data,K0_cont,ffig,ssave)
 %   A           : parametri stimati dall'ottimizzazione
 %
 
-global days K_disc
+global days K_disc t_u t_c regione
 
 % recupero i valori che servono
 [~,~,t_u,t_c,date] = data.time;
@@ -26,14 +26,26 @@ if isfield(data,'regione')
     regione = data(1).regione;
 end
 
-problem2.options    = optimoptions('fmincon','Display','iter');
-problem2.solver     = 'fmincon';
-problem2.objective  = @minquad_kcontinuo;          % funzionale obiettivo minimizzare
-problem2.x0         = K0_cont;                     % guess iniziale
+problem.options    = optimoptions('fmincon','Display','iter');
+problem.solver     = 'fmincon';
+problem.objective  = @minquad_kcontinuo;          % funzionale obiettivo minimizzare
+problem.x0         = K0_cont;                     % guess iniziale
+problem.nonlcon    = @(A)mycon(A);               % vincolo non lineare su k (=beta>0)
 
-A = fmincon(problem2);
+% %prove
+problem.OptimalityTolerance = 1e-12;
+problem.StepTolerance = 1e-12;
+problem.FunctionTolerance = 1e-12;
+problem.ConstraintTolerance = 1e-12;
+%problem.Algorithm = 'active-set';
+problem.MaxFunctionEvaluations = 4000; %max per fmincon con punto interno 3000
+problem.MaxIterations = 500;
 
-K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);  % guassiana
+
+A = fmincon(problem);
+
+K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+
 
 if ffig == 1
     
@@ -72,12 +84,12 @@ if ffig == 1
    
     if ssave == 1
         
-        if exist('regione','var') == 1
-            exportgraphics(fitting,'figure/' + regione + '/fittingk.pdf',...
+        if isempty(regione) == 1
+            exportgraphics(fitting,'figure/Italia/fittingk.pdf',...
             'ContentType','vector',...
             'BackgroundColor','none')
         else
-            exportgraphics(fitting,'figure/fittingk.pdf',...
+            exportgraphics(fitting,'figure/' + regione + '/fittingk.pdf',...
             'ContentType','vector',...
             'BackgroundColor','none')
         end
@@ -85,4 +97,45 @@ if ffig == 1
     end
 end
 
+end
+
+% VINCOLO NON LINEARE SU K
+
+function [c,ceq] = mycon(A)
+
+global x0 beta gamma t_u t_c regione
+
+    K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+    
+    SI = @(t,x) [-(beta - x(1)*x(2)/K(t))*x(1)*x(2);
+                  (beta - x(1)*x(2)/K(t))*x(1)*x(2) - gamma*x(2)];
+          
+    Jac = @(t,x) [ -beta*x(2) + 2*x(1)*(x(2)^2)/K(t), -beta*x(1) + 2*(x(1)^2)*x(2)/K(t);
+                    beta*x(2) - 2*x(1)*(x(2)^2)/K(t),  beta*x(1) - 2*(x(1)^2)*x(2)/K(t) - gamma];
+    options.Jacobian = Jac;
+    
+    if isempty(regione) % nel caso italia in questa funzione regione = [] 
+        nstep = (t_c-t_u)+1;
+        tspan = linspace(t_u,t_c,nstep);
+    else
+        switch regione
+            case "Veneto"
+                nstep = round(0.5*(100-t_u)+1);
+                tspan = linspace(t_u,100,nstep);
+            case "Emilia-Romagna"
+                nstep = 5*(90-t_u)+1;
+                tspan = linspace(t_u,90,nstep);
+            otherwise
+                nstep = (t_c-t_u)+1;
+                tspan = linspace(t_u,t_c,nstep);
+        end
+    end
+    
+    
+    [t, xm]  = eulerorosenbrock(SI,tspan,x0,options);
+    
+	% Nonlinear inequality constraints (c(K)<=0)
+    c = xm(:,1).*xm(:,2) - beta*K(t);   % deve essere <=0 (ATTENZIONE all'=)
+    
+    ceq = [];
 end

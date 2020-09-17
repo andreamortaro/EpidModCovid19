@@ -10,6 +10,7 @@ clc
 % controllo blocchi codice: posso fermare lockdown e riepilogo
 lock = 1;
 riep = 1;
+stat = 1;
 
 % Upload dati protezione civile
 tmp = fullfile('..','00 - dpc_data','2020-06-30','dati-regioni');
@@ -67,6 +68,8 @@ data(1).regione = regione;
 % controlo immagini e figure
 options.ffig  = 1;      % stampare figure
 options.ssave = 1;      % salvare immagine
+options.prelockopt = 0; % minimizzazione in Feb 24 fino a Mar 9
+
 
 options.pnt   = 100;    % piu nodi per migliore risoluzione sistema minquad
 K0 = [0.3,0.1];           % guess iniziale [beta,gamma]
@@ -99,10 +102,13 @@ options.pnt = 10;          % aumento numero nodi
 % 2. Fitto i k discreti ottenuti e ricavo k(t)
 
 switch regione
-    case {'Veneto','Lombardia'}
-        a = 1e-2; b = 45; c = 37;           % fitting gaussiana
+    case 'Veneto'
+        a = 0.3; b = 0.04; c = 0.02;         % fitting gaussiana
+        %a = 1e-2; b = 45; c = 37;           % fitting gaussiana
+    case 'Lombardia'
+        a = 6; b = 0.05; c = 0.001;
     case 'Emilia-Romagna'
-        a = 1e-3; b = 50; c = 30;
+        a = 50; b = 0.05; c = 0.02;
     otherwise
         a = 1e-6; b = 1e-4; c = 1e-3;       % fitting polinomiale
 end
@@ -125,7 +131,6 @@ if riep == 0
 else
     clear options
 end    
-
 %% Figure: riepilogo
 
 ssave = 1;
@@ -133,3 +138,16 @@ ssave = 1;
 tt = [tpl;tl]'; ii = [xpl(:,2);xl(:,2)]';
 
 riepilogo(data,tt,ii,ssave);
+
+if stat == 0
+    return
+else
+    clear options
+end
+
+%% statistica
+
+data(1).infSim = [tpl, xpl(:,2)];
+data(2).infSim = [tl, xl(:,2);];
+
+statistica(data)

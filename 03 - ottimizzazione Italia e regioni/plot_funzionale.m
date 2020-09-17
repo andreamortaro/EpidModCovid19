@@ -21,7 +21,7 @@ hold on
 kspan = linspace(1e-12,10,100);
 pnt = 15;
 [K2,L2] = plot_minquad_kdiscreti(data,kspan,pnt);
-plot(K2,L2)
+plot(K2,L2,'LineWidth',1.5)
 
 % zoomPlot to highlight a portion of the major plot
 [~,z] = zoomPlot(K1,L1,[1e-12 1e-2],[0.4 0.255 0.4 0.4],[1 3]);
@@ -35,6 +35,6 @@ hold on
 legend hide
 
 if ssave == 1
-    exportgraphics(fig,'figure/funzionalezoom.pdf','ContentType','vector',...
+    exportgraphics(fig,'figure/Italia/funzionalezoom.pdf','ContentType','vector',...
                    'BackgroundColor','none')
 end

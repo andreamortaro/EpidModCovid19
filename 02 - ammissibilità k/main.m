@@ -1,6 +1,10 @@
+%% Funziona su Octave. Non provato su Matlab.
+
 clc
 clear all
 close all
+
+ssave = 1;
 
 % parametri
 b0      = 25;
@@ -69,36 +73,41 @@ grid on
 drawnow
 
 
-% Valori ammissibili k
+%% Valori ammissibili k
 
-srange  = 0:0.05:1;
+srange  = 0:0.01:1;
 counter = 0;
+krange = zeros(1,length(srange));
 for s = srange
-    counter++;
+    counter=counter+1;
     krange(counter) = s*(1-s)/b0;
 end
 
 
 % Stampo la figura
 
-graphics_toolkit gnuplot
-set(gca, 'fontsize', 12.5)
+% graphics_toolkit gnuplot
+fig = figure();
 
-fig = figure()
+set(groot,...
+    'defaulttextinterpreter','latex',...
+    'defaultAxesTickLabelInterpreter','latex',...
+    'defaultLegendInterpreter','latex');
+
 max_k = max(krange);
 H = area(srange,[krange',2*max_k-krange'],'facecolor',[0.9 0.7 0.3]);
 hold on
-area(srange,krange','facecolor',"white")
+H2 = area(srange,krange','facecolor',"white");
 %title(["Valori ammissibili per k \n\
 %        fissati $\\beta_0$ = " num2str(b0) ", $\\gamma$ = " num2str(gamma)])
-#annotation ("textbox", [.74 .8 .18 .12], "string", ...
-#            ["$\\beta_0$ = " num2str(b0) "\n$\\gamma$ = " num2str(gamma)], 
-#             "horizontalalignment", "center",...
-#              "fitboxtotext", "off",...
-#              "backgroundcolor","white");  bug margini
 xlabel("$S_0$")
-ylabel("k")
+ylabel("$\kappa$")
 axis([0 1 0 0.012])
 
-print (fig, "ammissibili", "-dpdflatexstandalone", "-F:20");
-system ("pdflatex ammissibili");
+set(gca, 'fontsize', 12.5)
+
+if ssave == 1
+    exportgraphics(fig,'figure/ammissibili.pdf',...
+    'ContentType','vector',...
+    'BackgroundColor','none')
+end

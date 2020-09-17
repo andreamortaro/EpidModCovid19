@@ -65,6 +65,6 @@ end
 % Plot zoomPlot and change axis
 z = axes('position',pos);
 box on 
-plot(x,y)
+plot(x,y,'LineWidth',1.5)
 axis([xbounds(1) xbounds(2) min(y(index)) max(y(index))]);
 end
