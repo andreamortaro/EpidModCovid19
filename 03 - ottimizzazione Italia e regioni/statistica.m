@@ -5,11 +5,11 @@ function statistica(data)
 alfab = 0;
 alfag = 0;
 
-%p = 40;     % percentuale infetti che aggiungo
+%p = 40;         % percentuale infetti che aggiungo
 c = 8.56;
 p = 2*(c-1);
-M = 50;     % numero simulazioni con dato valore infetti iniziali misurato
-B = 1;     % numero simulazioni con dato beta
+M = 100;        % numero simulazioni con dato valore infetti iniziali misurato
+B = 1;          % numero simulazioni con dato beta
 
 data(1).parametersStat = alfab;
 data(2).parametersStat = alfag;
@@ -20,19 +20,25 @@ data(5).parametersStat = B;
 %% prelockdown
 
 ffig = 1;
-ssave = 1;
+ssave = 0;
 
 options.ffig = ffig;
 options.ssave = ssave;
 
-[tPL, ImedioPL,VarmediaPL,I0f,R0f,beta_hist,gamma_hist] = prelockStat(data,options);
+[tPL, ImedioPL,VarmediaPL,I0f,R0f,hist] = prelockStat(data,options);
+
+clear options
 
 %% lockdown
 
 ffig = 1;
 ssave = 1;
 
-[tL, ImedioL, VarmediaL] = lockdownStat(data,I0f,R0f,beta_hist,gamma_hist,options);
+options.ffig = ffig;
+options.ssave = ssave;
+options.deltatc = 10;
+
+[tL, ImedioL, VarmediaL,hist] = lockdownStat(data,I0f,R0f,hist,options);
 
 %% riepilogo
 
@@ -41,9 +47,10 @@ ssave = 1;
 
 options.ffig = ffig;
 options.ssave = ssave;
+
 tt = [tPL;tL]; ii = [ImedioPL;ImedioL]; vv = [VarmediaPL;VarmediaL];
 
-riepilogoStat(data,tt,ii,vv,options)
+riepilogoStat(data,tt,ii,vv,hist,options)
 
 return
 

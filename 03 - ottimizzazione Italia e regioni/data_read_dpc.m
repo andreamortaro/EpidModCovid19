@@ -1,4 +1,4 @@
-function [date,Ibar,Rbar] = data_read_dpc(path_folder)
+function [date,Ibar,Rbar,totCases] = data_read_dpc(path_folder)
 
 %
 %   [date,Ibar,Rbar] = data_read_dpc(path_folder)
@@ -24,7 +24,8 @@ numfiles=numel(dir(path_csv));       % numero files in path_csv
 % inizializzo
 Ibar=zeros(numfiles,1);
 Rbar=zeros(numfiles,1);
-date=string.empty;      % dichiaro un array vuoto di stringhe
+date=string.empty;                  % dichiaro un array vuoto di stringhe
+totCases=zeros(numfiles,1);         % numero totale di casi postivi
 
 for k=1:numfiles
 
@@ -39,6 +40,8 @@ for k=1:numfiles
                                                             % isolamento domiciliare
     Rbar(k) = sum(readmatrix(path_file,'Range','J:K'));     % deceduti + dimessi guariti
     
+    totCases(k) = readmatrix(path_file,'Range','N:N');     % tot casi positivi
+        
 end
 
 % modifico formato date in vec_date

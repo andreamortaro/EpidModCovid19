@@ -20,7 +20,7 @@ tmp = fullfile('..','00 - dpc_data','2020-06-30','dati-andamento-nazionale');
 
 [status,result]     = fileattrib(tmp);
 path_folder         = result.Name;                  % percorso alla cartella
-[date,Ibar,Rbar]    = data_read_dpc(path_folder);
+[date,Ibar,Rbar,totCases]    = data_read_dpc(path_folder);
 % Attenzione: gli indici in matrice partono da 1 e tm parte da 0
 % date(i), Ibar(i), Rbar(i) e' in corrispondenza con t_i-1
 
@@ -38,6 +38,7 @@ Nass = 60317000;                   % popolazione italiana istat 11.02.2020
 data(1).value = Nass;
 data(2).value = Ibar;
 data(3).value = Rbar;
+data(4).value = totCases;
 
 data(1).time = t_0;
 data(2).time = t_1;
@@ -48,7 +49,7 @@ data(5).time = date;
 %% Pre-Lockdown [t_0,t_u]: stima beta e gamma prima del Lockdown
 
 % controlo immagini e figure
-options.ssens = 0;      % analisi sensitività
+options.ssens = 1;      % analisi sensitività
 options.ffig  = 1;      % stampare figure
 options.ssave = 1;      % salvare immagine
 options.prelockopt = 0; % minimizzazione in Feb 24 fino a Mar 9
@@ -120,6 +121,6 @@ end
 %% statistica
 
 data(1).infSim = [tpl, xpl(:,2)];
-data(2).infSim = [tl, xl(:,2);];
+data(2).infSim = [tl, xl(:,2)];
 
 statistica(data)

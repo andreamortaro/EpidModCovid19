@@ -151,7 +151,7 @@ if ffig == 1
     ax.XTickLabelRotation = 45;
     box on
     legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
-    ylabel('casi confermati');
+    ylabel('casi attuali confermati');
     
     if exist('regione','var') == 1
         title(char(regione));

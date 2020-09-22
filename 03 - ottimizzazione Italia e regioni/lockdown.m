@@ -79,6 +79,9 @@ data(2).fittingK = K_disc;
 
 %% 2. Fitto i K_disc discreti ottenuti e ricavo k(t)
 
+ffig = 1;
+ssave = 0;
+
 [Kfun,A] = stima_kcontinuo(data,K0_cont,ffig,ssave);
 
 %% Simulazione modello oltre il lockdown

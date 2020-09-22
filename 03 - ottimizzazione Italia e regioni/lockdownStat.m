@@ -1,18 +1,19 @@
-function [tL, ImedioL, VarmediaL] = lockdownStat(data,I0f,R0f,beta_hist,gamma_hist,options)
+function [tL, ImedioL, VarmediaL,hist] = lockdownStat(data,I0f,R0f,hist,options)
 
 % recupero i valori che mi servono
-[Nass,~,~] = data.value;
+[Nass,Ibar,Rbar] = data.value;
 [~,~,t_u,t_c,~] = data.time;
 Kfun = data(3).Kvalue;
 
 % settaggio per parametri
-[alfab,alfag,p,M,B] = data.parametersStat;
+[~,~,~,M,B] = data.parametersStat;
+[beta_hist,gamma_hist] = hist.parameters;
+[I_old, R_old] = hist.sim;
 
 deltatc = 0;
-nstep = 500;
+nstep = 2000;
 if isfield(options,'deltatc')
     deltatc = options.deltatc;
-    nstep = options.nstep;
 end
 
 % salvo simulazioni (con rk4 non è facile prevedere la dimensione)
@@ -20,22 +21,43 @@ I_hist = cell(B,M); % per ogni riga beta,gamma fissato
 t_hist = cell(B,M);
 I_mean = cell(1,M); % valori medi, in ogni colonna ho un beta diverso
 
-
 for ii = 1:B
     
     betaz = beta_hist(ii);
     gammaz = gamma_hist(ii);
     
-    % update sistema
-    SI = @(t,x) [-(betaz - x(1)*x(2)/Kfun(t))*x(1)*x(2);
-                  (betaz - x(1)*x(2)/Kfun(t))*x(1)*x(2) - gammaz*x(2)];
+    % stimo i valori di (suscettibili e infetti) x riportati
 
-    Jac = @(t,x) [ -betaz*x(2) + 2*x(1)*(x(2)^2)/Kfun(t), -betaz*x(1) + 2*(x(1)^2)*x(2)/Kfun(t);
-                    betaz*x(2) - 2*x(1)*(x(2)^2)/Kfun(t),  betaz*x(1) - 2*(x(1)^2)*x(2)/Kfun(t) - gammaz];
+    SIr = @(t,x) [-(betaz - x(1)*x(2)/Kfun(t))*x(1)*x(2);
+                   (betaz - x(1)*x(2)/Kfun(t))*x(1)*x(2) - gammaz*x(2)];
+
+    Jacr = @(t,x) [ -betaz*x(2) + 2*x(1)*(x(2)^2)/Kfun(t), -betaz*x(1) + 2*(x(1)^2)*x(2)/Kfun(t);
+                     betaz*x(2) - 2*x(1)*(x(2)^2)/Kfun(t),  betaz*x(1) - 2*(x(1)^2)*x(2)/Kfun(t) - gammaz];
+    optr.Jacobian = Jacr;    
+    
+    I0r = Ibar(t_u+1); R0r = Rbar(t_u+1); S0r = Nass - I0r - R0r; 
+    x0r = [S0r;I0r]/Nass;
+
+    [t, x]  = eulerorosenbrock(SIr,linspace(t_u,t_c+deltatc,nstep),x0r,optr);
+    x(:,3) = ones(length(t),1) - x(:,1) - x(:,2);      % ricavo R per post-processing
+    %x = Nass.*x;                                      % normalizzo
+    
+    Sr = griddedInterpolant(t,x(:,1));
+    Ir = griddedInterpolant(t,x(:,2));
+
+    
+    % creo il sistema includendo i valori con i dati riportati
+    SI = @(t,x) [-(betaz - Sr(t)*Ir(t)/Kfun(t))*x(1)*x(2);
+                  (betaz - Sr(t)*Ir(t)/Kfun(t))*x(1)*x(2) - gammaz*x(2)];
+
+    Jac = @(t,x) [-(betaz - Sr(t)*Ir(t)/Kfun(t))*x(2),...
+                  -(betaz - Sr(t)*Ir(t)/Kfun(t))*x(1);...
+                  (betaz - Sr(t)*Ir(t)/Kfun(t))*x(2),...
+                  (betaz - Sr(t)*Ir(t)/Kfun(t))*x(1) - gammaz];
     opt.Jacobian = Jac;
     
-    %fig = figure('Visible','Off');
-    fig = figure();
+    figure('Visible','Off');
+    %figure();
     hold on
     
     % imposto latex come inteprete per i grafici
@@ -61,7 +83,8 @@ for ii = 1:B
         % salvo la simulazione
         I_hist{ii,jj} = x(:,2);   % lo salvo in colonna
         t_hist{ii,jj} = t;
-        
+        I_old{ii,jj} = [I_old{ii,jj}; x(2:end,2)];
+        R_old{ii,jj} = [R_old{ii,jj}; x(2:end,3)];
     end
     
     % fissato beta, calcolo la traiettoria I(t) media
@@ -72,11 +95,6 @@ for ii = 1:B
     hold on
     A = plot(t,mean,'LineStyle','--','LineWidth',1.5,'Color','black');
     legend(A,'media')
-
-    txt = sprintf('I0=%d, M =%i, p=%.2f',I0,M,p);
-    title(txt)
-
-    set(gca,'FontSize',12.5);
 end
 
 % media empirica
@@ -112,7 +130,8 @@ tmp = cell2mat(Var);
 Varmedia = sum(tmp,2)./B;
 
 % confronto tra calcolo e funzione built-in
-figure();
+%figure();
+figure('Visible','off');
 plot(t,Varmedia)
 xlabel('t')
 title('Varianza media')
@@ -122,8 +141,13 @@ set(gca,'FontSize',12.5);
 
 
 % salvo i dati
-tL = t_hist{1,1};
-ImedioL = Imedio;
-VarmediaL = Varmedia;
+tL = t_hist{1,1}(2:end);
+ImedioL = Imedio(2:end);
+VarmediaL = Varmedia(2:end);
+
+% ricostruisco le traiettorie
+for ii = 1:M
+hist(1).sim = I_old;
+hist(2).sim = R_old;
 
 end

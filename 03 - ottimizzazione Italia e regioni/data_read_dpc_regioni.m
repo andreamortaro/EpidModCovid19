@@ -1,4 +1,4 @@
-function [reg_label,date,Ibar,Rbar] = data_read_dpc_regioni(path_folder)
+function [reg_label,date,Ibar,Rbar,totCases] = data_read_dpc_regioni(path_folder)
 
 %
 %   [reg_label,date,Ibar,Rbar] = data_read_dpc_regioni(path_folder)
@@ -32,9 +32,11 @@ numfiles=numel(csvfiles);                       % numero files in path_csv
 regioni = 21;
 Ibar = cell(regioni,1);
 Rbar = cell(regioni,1);
+totCases = cell(regioni,1);
 for i = 1:21
     Ibar{i,1} = zeros(numfiles,1);
     Rbar{i,1} = zeros(numfiles,1);
+    totCases{i,1}=zeros(numfiles,1);         % numero totale di casi postivi
 end
 
 date=string.empty;                      % dichiaro un array vuoto di stringhe
@@ -46,11 +48,16 @@ for k=1:numfiles
 	% DATI
     tmp1 = readmatrix(path_file,'Range','K:K');
     tmp2 = sum(readmatrix(path_file,'Range','N:O'),2);   % somma in righe -> ottengo vettore
+    tmp3 = readmatrix(path_file,'Range','N:N');     % tot casi positivi
+
     
     for i = 1:regioni
-        Ibar{i,:}(k,:) = tmp1(i);	% totale_positivi = totale_ospedalizzati +
-                                                      % isolamento domiciliare
-        Rbar{i,:}(k,:) = tmp2(i);          % deceduti + dimessi guariti
+        Ibar{i,:}(k,:) = tmp1(i);           % totale_positivi = totale_ospedalizzati +
+                                                              % isolamento domiciliare
+        Rbar{i,:}(k,:) = tmp2(i);           % deceduti + dimessi guariti
+        
+        totCases{i,:}(k,:) = tmp3(i);       % tot casi positivi
+
     end
     
     % DATE YYYY/MM/DD in stringhe

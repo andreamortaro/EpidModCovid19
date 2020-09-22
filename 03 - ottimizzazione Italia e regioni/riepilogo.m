@@ -39,7 +39,7 @@ xline(t_u,':','inizio Lockdown')
 
 box on
 %legend([p1,p2],'$I_{bar}$','I','Location','Best');
-ylabel('casi confermati');
+ylabel('casi attuali confermati');
 
 if exist('regione','var') == 1
     title(char(regione));

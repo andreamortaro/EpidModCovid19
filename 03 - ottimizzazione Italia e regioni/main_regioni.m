@@ -17,7 +17,7 @@ tmp = fullfile('..','00 - dpc_data','2020-06-30','dati-regioni');
 
 [status,result] = fileattrib(tmp);
 path_folder = result.Name;              % percorso alla cartella
-[reg_label,date,Ibar_allreg,Rbar_allreg] = data_read_dpc_regioni(path_folder);
+[reg_label,date,Ibar_allreg,Rbar_allreg,totCases_allreg] = data_read_dpc_regioni(path_folder);
 % Attenzione: poiche' gli indici in matrice partono da 1 e tm parte da 0
 % date(i), Ibar(i), Rbar(i) e' in corrispondenza con t_i-1
 
@@ -41,6 +41,7 @@ regione = reg_label(i_reg);
 Nass    = Nass_reg(i_reg);                     % popolazione regione i_reg
 Ibar    = Ibar_allreg{i_reg,:};
 Rbar    = Rbar_allreg{i_reg,:};
+totCases= totCases_allreg{i_reg,:};
 % NOTA: per trento e bolzano ho inserito un unico valore Nass
 
 % DATI:
@@ -54,6 +55,7 @@ t_c = length(date)-1;       % decremento perche' parto da 0
 data(1).value = Nass;
 data(2).value = Ibar;
 data(3).value = Rbar;
+data(4).value = totCases;
 
 data(1).time = t_0;
 data(2).time = t_1;

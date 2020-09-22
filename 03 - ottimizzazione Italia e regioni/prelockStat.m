@@ -1,4 +1,4 @@
-function [tPL, ImedioPL, VarmediaPL,I0f,R0f,beta_hist,gamma_hist] = prelockStat(data,options)
+function [tPL, ImedioPL, VarmediaPL,I0f,R0f,hist] = prelockStat(data,options)
 
 
 % recupero i valori che mi servono
@@ -15,13 +15,9 @@ I0m = Ibar(t_0+1); R0m = Rbar(t_0+1);   % valori misurati
 % se non definisco options
 if nargin == 1
     ffig = 1;
-    ssave = 1;
 else
     if isfield(options,'ffig')
         ffig = options.ffig;
-    end
-    if isfield(options,'ssave')
-        ssave = options.ssave;
     end
 end
 
@@ -39,8 +35,7 @@ beta_hist = zeros(B,1);
 gamma_hist = zeros(B,1);
 I0f = zeros(B,M);           % salvo i valori finali
 R0f = zeros(B,M);
-I_mean = cell(1,B); % valori medi, in ogni colonna ho un beta diverso
-%R_mean = cell(1,B);
+I_mean = cell(1,B);         % valori medi, in ogni colonna ho un beta diverso
 
 for ii = 1:B
 
@@ -59,8 +54,8 @@ for ii = 1:B
                    betaz*x(2),  betaz*x(1) - gammaz];
     opt.Jacobian = Jac;
     
-    %fig = figure('Visible','Off');
-    fig = figure();
+    figure('Visible','Off');
+    %figure();
     hold on
     
     % imposto latex come inteprete per i grafici
@@ -134,9 +129,6 @@ end
 tmp = cell2mat(I_mean);
 Imedio = sum(tmp,2)./B;
 
-% tmp = cell2mat(R_mean);
-% Rmedio = sum(tmp,2)./B;
-
 % % come nell'articolo
 % mm = I0 + I0*p*.5;
 % mm/I0
@@ -167,7 +159,8 @@ tmp = cell2mat(Var);
 Varmedia = sum(tmp,2)./B;
 
 % confronto tra calcolo e funzione built-in
-figure();
+%figure();
+figure('Visible','off');
 plot(t,Varmedia)
 xlabel('t')
 title('Varianza media - prelock')
@@ -233,27 +226,8 @@ if ffig == 1
     ax.XTickLabel = date((0:7:14)+1);
     ax.XTickLabelRotation = 45;
     box on
-    %legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
-    ylabel('casi confermati');
+    ylabel('casi attuali attesi');
     
-    if exist('regione','var') == 1
-        title(char(regione));
-    else
-        title('Italia')
-    end
-    
-    set(gca,'FontSize',12.5)
-    if ssave == 1
-        if exist('regione','var') == 1
-            exportgraphics(fig,'figure/' + regione + '/prelockStat.pdf',...
-            'ContentType','vector',...
-            'BackgroundColor','none')
-        else
-            exportgraphics(fig,'figure/Italia/Italia_prelockStat.pdf',...
-            'ContentType','vector',...
-            'BackgroundColor','none')
-        end
-    end
 end
 
 % salvo i dati
@@ -261,5 +235,9 @@ tPL = t_hist{1,1};
 ImedioPL = Imedio;
 VarmediaPL = Varmedia;
 
+hist(1).parameters = beta_hist;
+hist(2).parameters = gamma_hist;
+hist(1).sim = I_hist;
+hist(2).sim = R_hist;
 
 end
