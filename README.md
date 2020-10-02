@@ -4,7 +4,8 @@ In questo repository sono presenti tutti i codici sviluppati per la mia tesi tri
 
 ## Licenza
 
-Tutti i codici sono rilasciati sotto la licenza MIT. [Vedi LICENSE](https://github.com/andreamortaro/EpidModCovid19/blob/master/LICENSE) per i dettagli.  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Tutti i codici sono rilasciati sotto la licenza MIT. [Vedi LICENSE](https://github.com/andreamortaro/EpidModCovid19/blob/master/LICENSE) per i dettagli.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Crediti
   - zoomPlot.m
