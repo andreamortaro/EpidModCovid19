@@ -36,21 +36,42 @@ plot(t_0:t_c,Ibar,'o',...
 
 sm = sqrt(vv);                % scarto quadratico medio
 
-z_alpha1 = 1.96;                    % alpha = 0.05 (confidenza) --> liv conf 0.95
-delta1 = z_alpha1*sm/sqrt(M*B);     % giusto M*B?
+% confidence I
 
-z_alpha2 = 1.2816;                  % alpha = 0.20 (confidenza) --> liv conf 0.80
-delta2 = z_alpha2*sm/sqrt(M*B);
+%I_hist = hist(1).sim;
 
-z_alpha3 = 0.67;                    % liv confidenza 0.50
-delta3 = z_alpha3*sm/sqrt(M*B);
+% p = 0.05; x = N*Ibar_z1(tt,:);
+% CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+% CII(tt,:) = CIFcn(x,100-p*100); 
 
-H1 = plot(tt, ii, 'Color', [.1 .3 .5], 'LineWidth', 2);
+p = 0.05;
+CII = zeros(length(ii),2);
+for idx = 1:length(ii)
+    x = ii(idx);
+    CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+    CII(idx,:) = CIFcn(x,100-p*100); 
+end
+
+%z_alpha1 = 1.96;                    % alpha = 0.05 (confidenza) --> liv conf 0.95
+delta1 = CII.*sm/sqrt(M*B);     % giusto M*B?
+
+p = 0.50;
+CII = zeros(length(ii),2);
+for idx = 1:length(ii)
+    x = ii(idx);
+    CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+    CII(idx,:) = CIFcn(x,100-p*100); 
+end
+
+%z_alpha3 = 0.67;                    % liv confidenza 0.50
+delta3 = CII.*sm/sqrt(M*B);
+
+H1 = plot(tt, ii, 'Color', [.1 .3 .5], 'LineWidth', 2.5);
 hold on
-H2 = plot(tt, ii - delta1,...
-          tt, ii + delta1,'Color', 'b','Visible','Off');
-H3 = plot(tt, ii - delta3,...
-          tt, ii + delta3,'Color', 'b','Visible','Off');
+H2 = plot(tt, ii - delta1(:,1),...
+          tt, ii + delta1(:,2),'Color', 'b','Visible','Off');
+H3 = plot(tt, ii - delta3(:,1),...
+          tt, ii + delta3(:,2),'Color', 'b','Visible','Off');
 ttt = [tt', fliplr(tt')]';
 hold on
 yyy = [H2(1).YData, fliplr(H2(2).YData)]'; fill(ttt,yyy,'b','facealpha',0.2);
@@ -97,21 +118,34 @@ plot(tt,cTmedio,'Linewidth',2.5,'color','black'); p2.Color(4) = 0.6;
 
 sm = sqrt(cTVarmedia);                % scarto quadratico medio
 
-z_alpha1 = 1.96;                    % alpha = 0.05 (confidenza) --> liv conf 0.95
-delta1 = z_alpha1*sm/sqrt(M*B);     % giusto M*B?
+p = 0.05;
+CII = zeros(length(cTmedio),2);
+for idx = 1:length(cTmedio)
+    x = cTmedio(idx);
+    CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+    CII(idx,:) = CIFcn(x,100-p*100); 
+end
 
-z_alpha2 = 1.2816;                  % alpha = 0.20 (confidenza) --> liv conf 0.80
-delta2 = z_alpha2*sm/sqrt(M*B);
+%z_alpha1 = 1.96;                    % alpha = 0.05 (confidenza) --> liv conf 0.95
+delta1 = CII.*sm/sqrt(M*B);     % giusto M*B?
 
-z_alpha3 = 0.67;                    % liv confidenza 0.50
-delta3 = z_alpha3*sm/sqrt(M*B);
+p = 0.50;
+CII = zeros(length(cTmedio),2);
+for idx = 1:length(cTmedio)
+    x = cTmedio(idx);
+    CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+    CII(idx,:) = CIFcn(x,100-p*100); 
+end
 
-H1 = plot(tt, cTmedio, 'Color', [.7 0 0], 'LineWidth', 2);
+%z_alpha3 = 0.67;                    % liv confidenza 0.50
+delta3 = CII.*sm/sqrt(M*B);
+
+H1 = plot(tt, cTmedio, 'Color', [.7 0 0], 'LineWidth', 2.5);
 hold on
-H2 = plot(tt, cTmedio - delta1,...
-          tt, cTmedio + delta1,'Color', 'b','Visible','Off');
-H3 = plot(tt, cTmedio - delta3,...
-          tt, cTmedio + delta3,'Color', 'b','Visible','Off');
+H2 = plot(tt, cTmedio - delta1(:,1),...
+          tt, cTmedio + delta1(:,2),'Color', 'b','Visible','Off');
+H3 = plot(tt, cTmedio - delta3(:,1),...
+          tt, cTmedio + delta3(:,2),'Color', 'b','Visible','Off');
 ttt = [tt', fliplr(tt')]';
 hold on
 yyy = [H2(1).YData, fliplr(H2(2).YData)]'; fill(ttt,yyy,[.6 .8 .2],'facealpha',0.3);

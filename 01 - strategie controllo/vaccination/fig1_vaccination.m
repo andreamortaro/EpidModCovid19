@@ -46,7 +46,7 @@ scalino1(tsol1>=t1 & tsol1<=t2) = u_max;
 %% 2. CONTROLLO SU [before peak,T]
 
 %sovrascrivo i t1,t2
-t1 = 1;                % inizio controllo
+t1 = 2.5;                % inizio controllo
 t2 = T;                % fine controllo
 
 t1_hist{2} = t1;
@@ -134,14 +134,14 @@ for i =1:4
     plot(tsol,xsol(:,2),'SeriesIndex',1,'LineWidth',1.5)
     xline(t1,':','attivazione','LineWidth',1.5);
     H = get(fig,'CurrentAxes'); set(H,'YTickLabel',{})
-    if t1 > 5
-        set(H,'XTick',[0,5,t1,15,T],'XTickLabel',{'','','$\tau^{*}$','',''})
-    elseif t1 > 0 && t1 <5
-        set(H,'XTick',[0,t1,5,10,15,T],'XTickLabel',{'','$\tau^{*}$','','','',''})
-    elseif t1 == 5
-        set(H,'XTick',[0,t1,10,15,T],'XTickLabel',{'','$\tau^{*}$','','',''})
-    elseif t1 == 0
+    if i == 1
         set(H,'XTick',[t1,5,10,15,T],'XTickLabel',{'$\tau^{*}$','','','',''})
+    elseif i == 2
+        set(H,'XTick',[0,t1,5,10,15,T],'XTickLabel',{'','$\tau^{*}$','','','',''})
+    elseif i == 3
+        set(H,'XTick',[0,t1,10,15,T],'XTickLabel',{'','$\tau^{*}$','','',''})
+    elseif i == 4
+        set(H,'XTick',[0,5,t1,15,T],'XTickLabel',{'','','$\tau^{*}$','',''})
     end
     axis([0 T 0 N]);
     xlabel("t");

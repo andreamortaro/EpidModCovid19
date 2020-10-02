@@ -16,15 +16,21 @@ function [K,A] = stima_kcontinuo(data,K0_cont,ffig,ssave)
 %   A           : parametri stimati dall'ottimizzazione
 %
 
-global days K_disc t_u t_c regione
+global days K_disc Nass t_u t_c regione
 
 % recupero i valori che servono
+Nass = data(1).value;
 [~,~,t_u,t_c,date] = data.time;
 [days,K_disc] = data.fittingK;
 
 if isfield(data,'regione')
     regione = data(1).regione;
+    if regione == 'Lombardia'
+        days = days(10:end);
+        K_disc = K_disc(10:end);
+    end
 end
+
 
 problem.options    = optimoptions('fmincon','Display','iter');
 problem.solver     = 'fmincon';
@@ -36,7 +42,7 @@ problem.nonlcon    = @(A)mycon(A);               % vincolo non lineare su k (=be
 problem.OptimalityTolerance = 1e-12;
 problem.StepTolerance = 1e-12;
 problem.FunctionTolerance = 1e-12;
-problem.ConstraintTolerance = 1e-12;
+problem.CostrainTolerance = 1e-2;
 %problem.Algorithm = 'active-set';
 problem.MaxFunctionEvaluations = 4000; %max per fmincon con punto interno 3000
 problem.MaxIterations = 500;
@@ -44,7 +50,31 @@ problem.MaxIterations = 500;
 
 A = fmincon(problem);
 
-K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+if isempty(regione) % nel caso italia in questa funzione regione = []
+    K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+else
+    switch regione
+        case "Veneto"
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<101)+A(1)*exp(-((101-A(2))/A(3)).^2).*(t>=101);
+        case "Emilia-Romagna"
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<107)+A(1)*exp(-((107-A(2))/A(3)).^2).*(t>=107);
+        otherwise
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    end
+end
+
+% if isempty(regione) % nel caso italia in questa funzione regione = []
+%     K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+% else
+%     switch regione
+%         case "Veneto"
+%             K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3.*(t<105)+A(1)*exp(-A(2)*105).*(1-exp(-A(3)*105)).^3.*(t>=105);
+%         case "Emilia-Romagna"
+%             K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3.*(t<107)+A(1)*exp(-A(2)*107).*(1-exp(-A(3)*107)).^3.*(t>=107);
+%         otherwise
+%             K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+%     end
+% end
 
 
 if ffig == 1
@@ -80,7 +110,6 @@ if ffig == 1
     ax.XTickLabelRotation = 45;
     
     set(gca,'FontSize',12.5);
-
    
     if ssave == 1
         
@@ -105,7 +134,9 @@ function [c,ceq] = mycon(A)
 
 global x0 beta gamma t_u t_c regione
 
-    K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+    %K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+    K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    
     
     SI = @(t,x) [-(beta - x(1)*x(2)/K(t))*x(1)*x(2);
                   (beta - x(1)*x(2)/K(t))*x(1)*x(2) - gamma*x(2)];
@@ -115,22 +146,21 @@ global x0 beta gamma t_u t_c regione
     options.Jacobian = Jac;
     
     if isempty(regione) % nel caso italia in questa funzione regione = [] 
-        nstep = (t_c-t_u)+1;
-        tspan = linspace(t_u,t_c,nstep);
+        nstep = 100;
+        tspan = linspace(t_u,90,nstep);
     else
         switch regione
             case "Veneto"
-                nstep = round(0.5*(100-t_u)+1);
-                tspan = linspace(t_u,100,nstep);
+                nstep = 30;
+                tspan = linspace(t_u,50,nstep);
             case "Emilia-Romagna"
-                nstep = 5*(90-t_u)+1;
-                tspan = linspace(t_u,90,nstep);
+                nstep = 50;
+                tspan = linspace(t_u,60,nstep);
             otherwise
-                nstep = (t_c-t_u)+1;
-                tspan = linspace(t_u,t_c,nstep);
+                nstep = 500;
+                tspan = linspace(t_u,110,nstep);
         end
     end
-    
     
     [t, xm]  = eulerorosenbrock(SI,tspan,x0,options);
     

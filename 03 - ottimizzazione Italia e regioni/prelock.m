@@ -134,7 +134,7 @@ if ffig == 1
         'MarkerEdgeColor',[.3 .4 .6],...
         'MarkerFaceColor',[.3 .6 .8]);
     
-    p3 = plot(t,x(:,2),'SeriesIndex',2,'Linewidth',2.5); p3.Color(4) = 0.6;
+    p3 = plot(t,x(:,2),'color','black','Linewidth',2.5); p3.Color(4) = 0.6;
     hold on
     p4 = plot(t,x(:,3),'SeriesIndex',1,'Linewidth',2.5); p4.Color(4) = 0.6;
     
@@ -150,7 +150,7 @@ if ffig == 1
     ax.XTickLabel = date((0:7:14)+1);
     ax.XTickLabelRotation = 45;
     box on
-    legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
+    %legend([p1,p2,p3,p4],'$I_{bar}$','$R_{bar}$','I','R','Location','NorthWest');
     ylabel('casi attuali confermati');
     
     if exist('regione','var') == 1
@@ -161,7 +161,6 @@ if ffig == 1
         title('Italia')
     end
     
-    set(gca,'FontSize',12.5)
     if ssave == 1
         if exist('regione','var') == 1
             exportgraphics(fig,'figure/' + regione + '/prelock.pdf','ContentType','vector',...

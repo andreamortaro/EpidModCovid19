@@ -63,7 +63,7 @@ for K = kspan
         L = L+(psi*(ym(j,1)-xm(tt(j),2)).^n + ...
                phi*(ym(j,2)-xm(tt(j),3)).^n);  % misura minimi quadrati
     end
-    L = deltat*L;
+    L = L/Nass;
 
     % salvo i dati
     Kval(it) = K;

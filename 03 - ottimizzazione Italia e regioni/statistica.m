@@ -8,8 +8,8 @@ alfag = 0;
 %p = 40;         % percentuale infetti che aggiungo
 c = 8.56;
 p = 2*(c-1);
-M = 100;        % numero simulazioni con dato valore infetti iniziali misurato
-B = 1;          % numero simulazioni con dato beta
+M = 30;        % numero simulazioni con dato valore infetti iniziali misurato
+B = 10;          % numero simulazioni con dato beta e gamma
 
 data(1).parametersStat = alfab;
 data(2).parametersStat = alfag;
@@ -39,6 +39,7 @@ options.ssave = ssave;
 options.deltatc = 10;
 
 [tL, ImedioL, VarmediaL,hist] = lockdownStat(data,I0f,R0f,hist,options);
+% hist.sim: sulle righe della cell variano i beta e gamma
 
 %% riepilogo
 

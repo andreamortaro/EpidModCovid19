@@ -21,8 +21,6 @@ tstar = 5000;
 options.InitialStep = 0.1; % SIR
 
 Nass = 1000;
-I0span = 10:100:610;
-E0span = 0;
 
 %% figura SEI
 
@@ -58,6 +56,31 @@ ylabel('E')
 zlabel('I')
 grid on
 hold on
+
+I0span = 10:100:610;
+E0span = 0;
+
+for I0 = I0span
+    for E0 = E0span
+
+        % risoluzione sistema per fissato I0
+        S0 = Nass-I0-E0;
+        x0=[S0;E0;I0]./Nass;
+
+        [t,xsol] = rk4(SEI,[0,tstar],x0,options);
+        %xsol = xsol.*Nass;
+
+        % PLOT 3D
+        hold on
+        plot3(xsol(:,1),xsol(:,2),xsol(:,3),'SeriesIndex',1,'LineWidth',1.5)    % piano delle fasi
+        xlim([0 1]); ylim([0 1]); zlim([0 1]);
+        drawnow
+
+    end
+end
+   
+I0span = 250:250:500;
+E0span = 250:250:500;
 
 for I0 = I0span
     for E0 = E0span

@@ -56,20 +56,11 @@ ax_fig.XLim = fig_xlim;
 if isfield(data,'regione')
     switch regione
         case 'Veneto'
-            switch t_c
-                case 87
-                    ax_fig.YLim = [0 2e4];
-            end
+            ax_fig.YLim = [0 2e4];
         case 'Lombardia'
-            switch t_c
-                case 87
-                    ax_fig.YLim = [0 10e4];
-            end
+            ax_fig.YLim = [0 6.5e4];
         case 'Emilia-Romagna'
-            switch t_c
-                case 87
-                    ax_fig.YLim = [0 3e4];
-            end
+            ax_fig.YLim = [0 3e4];
         otherwise
             ax_fig.YLim = [0 3.5e5];
     end

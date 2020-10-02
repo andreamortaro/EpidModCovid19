@@ -40,8 +40,8 @@ I_mean = cell(1,B);         % valori medi, in ogni colonna ho un beta diverso
 for ii = 1:B
 
     % definisco i parametri betaz e gammaz
-    %z2 = random('Beta',2,2);
-    z2 = rand;
+    z2 = random('Beta',2,2);
+    %z2 = rand;
     % beta e gamma come nell'articolo, ma così gamma diventa enorme
     betaz = beta + alfab*z2;
     gammaz = gamma + alfag*z2;
@@ -197,22 +197,36 @@ if ffig == 1
     % grafico con intervallo di confidenza
     
     sm = sqrt(Varmedia);                % scarto quadratico medio
+    
+    p = 0.05;
+    CII = zeros(length(ii),2);
+    for idx = 1:length(ii)
+        x = ii(idx);
+        CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+        CII(idx,:) = CIFcn(x,100-p*100); 
+    end
 
-    z_alpha1 = 1.96;                    % alpha = 0.05 (confidenza) --> liv conf 0.95
-    delta1 = z_alpha1*sm/sqrt(M*B);     % giusto M*B?
+    %z_alpha1 = 1.96;                    % alpha = 0.05 (confidenza) --> liv conf 0.95
+    delta1 = CII.*sm/sqrt(M*B);     % giusto M*B?
 
-    z_alpha2 = 1.2816;                  % alpha = 0.20 (confidenza) --> liv conf 0.80
-    delta2 = z_alpha2*sm/sqrt(M*B);
+    p = 0.50;
+    CII = zeros(length(ii),2);
+    for idx = 1:length(ii)
+        x = ii(idx);
+        CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+        CII(idx,:) = CIFcn(x,100-p*100); 
+    end
+    
+    %z_alpha3 = 0.67;                    % liv confidenza 0.50
+    delta3 = CII.*sm/sqrt(M*B);
 
-    z_alpha3 = 0.67;                    % liv confidenza 0.50
-    delta3 = z_alpha3*sm/sqrt(M*B);
 
     H1 = plot(t, Imedio, 'Color', 'k', 'LineWidth', 2);
     hold on
-    H2 = plot(t, Imedio - delta1,...
-              t, Imedio + delta1,'Color', 'b');
-    H3 = plot(t, Imedio - delta3,...
-              t, Imedio + delta3,'Color', 'b');
+    H2 = plot(t, Imedio - delta1(:,1),...
+              t, Imedio + delta1(:,2),'Color', 'b');
+    H3 = plot(t, Imedio - delta3(:,1),...
+              t, Imedio + delta3(:,2),'Color', 'b');
     tt = [t', fliplr(t')]';
     hold on
     yy = [H2(1).YData, fliplr(H2(2).YData)]'; h2 = fill(tt,yy,'b','facealpha',0.2);

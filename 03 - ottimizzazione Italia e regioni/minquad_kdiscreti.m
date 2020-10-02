@@ -48,6 +48,6 @@ end
 % aggiustamento, pnt*(tm(j)-t_0)+1 per beccare la soluzione nel posto giusto
 % tspan(pnt*(tm(j)-t_0)+1) = tm e t(pnt*(tm-t_0)+1) = tm come volevo
 
-L = deltat*L;
+%L = L/Nass;
 
 end

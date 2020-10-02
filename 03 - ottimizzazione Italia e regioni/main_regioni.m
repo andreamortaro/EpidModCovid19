@@ -8,9 +8,9 @@ close all
 clc
 
 % controllo blocchi codice: posso fermare lockdown e riepilogo
-lock = 1;
-riep = 1;
-stat = 1;
+lock = 0;
+riep = 0;
+stat = 0;
 
 % Upload dati protezione civile
 tmp = fullfile('..','00 - dpc_data','2020-06-30','dati-regioni');
@@ -74,7 +74,8 @@ options.prelockopt = 0; % minimizzazione in Feb 24 fino a Mar 9
 
 
 options.pnt   = 100;    % piu nodi per migliore risoluzione sistema minquad
-K0 = [0.3,0.1];           % guess iniziale [beta,gamma]
+%K0 = [0.3,0.1];           % guess iniziale [beta,gamma]
+K0  = [0.3088,0.0495];
 
 [tpl,xpl,beta,gamma] = prelock(data,K0,options);
 
@@ -105,12 +106,13 @@ options.pnt = 10;          % aumento numero nodi
 
 switch regione
     case 'Veneto'
-        a = 0.3; b = 0.04; c = 0.02;         % fitting gaussiana
-        %a = 1e-2; b = 45; c = 37;           % fitting gaussiana
+        %a = 0.3; b = 0.04; c = 0.02;         % fitting gaussiana
+          a = .004; b = 50; c = 30;
     case 'Lombardia'
-        a = 6; b = 0.05; c = 0.001;
+         %a = 0.7; b = .02; c = .02;        % exp
+         a = .08; b = 50; c = 50;
     case 'Emilia-Romagna'
-        a = 50; b = 0.05; c = 0.02;
+          a = .004; b = 50; c = 30;
     otherwise
         a = 1e-6; b = 1e-4; c = 1e-3;       % fitting polinomiale
 end

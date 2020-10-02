@@ -84,7 +84,8 @@ K0_disc	= 1e-5;         % guess iniziale
 options.pnt	= 100;      % aumento numero nodi integrazione
 
 % 2. Fitto i k discreti ottenuti e ricavo k(t)
-a = 6; b = 0.05; c = 0.001;
+a = 0.006; b = 52; c = 40; % guassiana
+%a = 1; b = 0.05; c = 0.01;    % exp^3
 K0_cont = [a,b,c];                  % guess iniziale
 
 % 3. Simulazione modello oltre il lockdown
