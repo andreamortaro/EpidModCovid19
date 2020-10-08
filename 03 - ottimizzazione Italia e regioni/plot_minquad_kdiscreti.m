@@ -1,15 +1,9 @@
-function [Kval,Lval] = plot_minquad_kdiscreti(data,kspan,pnt)     % funzionale da minimizzare
+function [Kval,Lval] = plot_minquad_kdiscreti(data,kspan,pnt)
 
 %
-%   L = minquad(K)
-%
-%   Definisco il funzionale L da minimizzare
-%
-%   INPUTS:
-%   K       : incognita
-%
-%   OUTPUTS:
-%   L       : funzione minimi quadrati
+%   la funzione plot_minquad_kdiscreti(data,kspan,pnt) restituisce i
+%   valori del parametro K discreto e del funzionale L, ottenuti
+%   mediante la risoluzione del problema ai minimi quadrati.
 %
 
 % recupero i valori che servono

@@ -3,26 +3,23 @@ function [reg_label,date,Ibar,Rbar,totCases] = data_read_dpc_regioni(path_folder
 %
 %   [reg_label,date,Ibar,Rbar] = data_read_dpc_regioni(path_folder)
 %
-%   data_read_dpc_regioni legge i dati della protezione civile per
-%   le regioni
+%   data_read_dpc_regioni legge i dati della Protezione Civile nel caso
+%   dei dati relativi alle regioni italiane.
 %
 %   INPUTS:
 %   path_folder : percorso folder dove ci sono i csv
 %
 %   OUTPUTS:
 %   reg_label   : etichette regioni
-%   date        : vettore stringhe di date
-%   Ibar        : cella di dimensioni(21,1) dove in {i,:}(:) ho Ibar della
-%                 regione i
-%                 totale casi positivi, I(t) secondo il SIR
-%   Rbar        : cella di dimensioni(21,1) dove in {i,:}(:) ho Ibar della
-%                 regione i
-%                 totale rimossi, R(t) secondo il SIR
+%   date        : vettore stringhe delle date presenti nei csv
+%   Ibar        : casi positivi giornalieri nei dati della P.C., I nel SIR.
+%                 Consiste in una cella di dimensioni(21,1) dove Ibar{i,:}(:)
+%                 corrisponde al vettore Ibar della regione i-esima
+%   Rbar        : somma deceduti e guariti giornalieri nei dati della P.C., R nel SIR.
+%                 Consiste in una cella di dimensioni(21,1) dove Rbar{i,:}(:)
+%                 corrisponde al vettore Rbar della regione i-esima
+%   totCases    : totale casi positivi nei dati della P.C., I+R nel SIR
 %
-%
-
-%[status,result] = fileattrib('dati-andamento-nazionale');
-%path_folder = result.Name;                     % percorso alla cartella
 
 path_csv = fullfile(path_folder, '*.csv');
 csvfiles=dir(path_csv);                         % struttura contenente campo nome file
@@ -65,13 +62,6 @@ for k=1:numfiles
     
 end
 
-% dall'ultimo file (di cui ho il percorso in path_file) ricavo le regioni
-% fid = fopen(path_file,'r');
-% fmt  = ['%*s %*s %*d %s %*f %*f' repmat(' %*d',1,13)];
-% tmp  = textscan(fid,fmt,'Delimiter',',','HeaderLines',1);
-% reg_label = tmp{1};
-% fclose(fid);
-
 reg_label = readmatrix(path_file,'Range','D:D','OutputType','string');
 
 % modifico formato date
@@ -79,6 +69,5 @@ fmt_date_in = "yyyy-MM-dd"; fmt_date_out = "mmm dd";
 DateStringIn = datetime(date,'InputFormat',fmt_date_in);        % converto in datetime
 date = datestr(DateStringIn,fmt_date_out);                      % cambio formato data
 date = string(date);                                            % casting in string
-
 
 return

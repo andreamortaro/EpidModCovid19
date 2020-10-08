@@ -1,16 +1,23 @@
-function []=kSIR(data,ssave)
+function kSIR(ssave)
+
+%
+%   la funzione kSIR simula il modello kSIR nel caso quattro differenti
+%   tempi di attivazione del controllo k.
+%
 
 clc
 close all
 
-[beta,gamma] = data.parameters;
+%[beta,gamma] = data.parameters;
 
 t_u = 14;
-t_c = 127;
 k = 0.25;
 
-T = t_c;
-tspan = linspace(t_u,t_c,50000);
+beta = 0.35;
+gamma = 0.1;
+
+T = 34;
+tspan = linspace(t_u,T,5000);
     
 Nass = 100;
 % I0  = Ibar(t_u+1); R0 = Rbar(t_u+1); S0 = Nass-I0-R0;
@@ -107,7 +114,7 @@ for i =1:4
     xsol = xsol_all{i}; %xsol = xsol.*Nass;
     t1 = t1_hist{i};
 
-    issorted(xsol(:,1),'descend')
+    %issorted(xsol(:,1),'descend')
     
     % imposto latex come inteprete per i grafici
     set(groot,...
@@ -117,22 +124,17 @@ for i =1:4
     
 
     fig = figure();
-    %hax = plotyy(tsol, xsol(:,2),xs,ys);
-    %set(hax,'xcolor','k','ycolor','k','ylim',[0,N])
-    %set(hax(1), 'YTick',0:20:100)
-    %ffont = 14;
-    %set(hax(2), 'YTick',[0,u_max], 'YTickLabel',{'0','$u^{max}$'},'FontSize',ffont)
     plot(tsol+6,xsol(:,2),'SeriesIndex',1,'LineWidth',1.5)
     xline(t1+6,':','attivazione','LineWidth',1.5);
     H = get(fig,'CurrentAxes'); set(H,'YTickLabel',{})
     if i == 1
-        set(H,'XTick',[t1+6,25,30,35,40],'XTickLabel',{'$\tau^{*}$','','','',''})
+        set(H,'XTick',[t1+6,25,30,35,40],'XTickLabel',{'$\tau^{*}$','','','','$t_{f}$'})
     elseif i == 2
-        set(H,'XTick',[20,t1+6,25,30,35,40],'XTickLabel',{'','$\tau^{*}$','','','','',''})
+        set(H,'XTick',[20,t1+6,25,30,35,40],'XTickLabel',{'','$\tau^{*}$','','','','$t_{f}$'})
     elseif i == 3
-        set(H,'XTick',[20,t1+6,30,35,40],'XTickLabel',{'','$\tau^{*}$','','',''})
+        set(H,'XTick',[20,t1+6,30,35,40],'XTickLabel',{'','$\tau^{*}$','','','$t_{f}$'})
     elseif i == 4
-        set(H,'XTick',[20,25,t1+6,35,40],'XTickLabel',{'','','$\tau^{*}$','',''})
+        set(H,'XTick',[20,25,t1+6,35,40],'XTickLabel',{'','','$\tau^{*}$','','$t_{f}$'})
     end
     axis([20 40 0 1]);
     xlabel("t");

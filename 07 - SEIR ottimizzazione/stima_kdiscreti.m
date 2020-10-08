@@ -89,12 +89,14 @@ global x0 beta gamma mu tl tr
                     mu*x(2)- gamma*x(3)];
           
     Jac = @(t,x) [ -beta*x(3) + 2*x(1)*(x(3)^2)/K, 0, -beta*x(1) + 2*(x(1)^2)*x(3)/K;...
-                    beta*x(3) - 2*x(1)*(x(3)^2)/K, -mu,  beta*x(1) - 2*(x(1)^2)*x(3)/K - gamma;...
+                    beta*x(3) - 2*x(1)*(x(3)^2)/K, -mu,  beta*x(1) - 2*(x(1)^2)*x(3)/K;...
                     0, mu,-gamma];
     options.Jacobian = Jac;    
     
     nstep = (tr-tl)+1;
     [~, xm]  = eulerorosenbrock(SEI,linspace(tl,tr,nstep),x0,options);
+%    [~, xm]  = ode15s(SEI,linspace(tl,tr,nstep),x0);
+
 
     % controllo la condizione con i valori in percentuale, altrimenti e'
     % impossibile verificare la condizione

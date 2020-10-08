@@ -1,5 +1,11 @@
 function [tPL, ImedioPL, VarmediaPL,I0f,R0f,hist] = prelockStat(data,options)
 
+%
+%   prelockStat simula il modello SIR M*B volte e stampa a video
+%   i casi positivi attesi durante il periodo antecedente al lockdown.
+%   Nell'output della funzione salva i risultati ottenuti e le simulazioni
+%   effettuate.
+%
 
 % recupero i valori che mi servono
 [Nass,Ibar,Rbar] = data.value;
@@ -42,7 +48,6 @@ for ii = 1:B
     % definisco i parametri betaz e gammaz
     z2 = random('Beta',2,2);
     %z2 = rand;
-    % beta e gamma come nell'articolo, ma così gamma diventa enorme
     betaz = beta + alfab*z2;
     gammaz = gamma + alfag*z2;
     
@@ -89,8 +94,8 @@ for ii = 1:B
         
     end
 
-    beta_hist(ii) = beta;
-    gamma_hist(ii) = gamma;
+    beta_hist(ii) = betaz;
+    gamma_hist(ii) = gammaz;
     
     tmp = cell2mat(R_hist(ii,:));
     R0f(ii,:) = tmp(end,:);
@@ -105,33 +110,11 @@ for ii = 1:B
     hold on
     A = plot(t,mean,'LineStyle','--','LineWidth',1.5,'Color','black');
     legend(A,'media')
-    
-    txt = sprintf('I0=%d, M =%i, p=%.2f prelock ',I0,M,p);
-    
-    if exist('regione','var') == 1
-        title([txt char(regione)]);
-    else
-        title([txt 'Italia'])
-        
-    end
-    
-%     % controllare se cell2mat(t_hist(1,:))
-%     tmp = cell2mat(t_hist(1,:));
-%     for kk = 1:length(t)
-%         if isequal(tmp(kk,:)) == 0
-%             warning('Attenzione ai tempi della soluzione')
-%         end
-%     end
-
 end
 
 % media empirica
 tmp = cell2mat(I_mean);
 Imedio = sum(tmp,2)./B;
-
-% % come nell'articolo
-% mm = I0 + I0*p*.5;
-% mm/I0
 
 %% Calcolo Varianza
 % per ogni tempo tk calcolo la varianza, cioe' distanza media dei valori I(tk)
@@ -145,8 +128,8 @@ for ii = 1:B
     tmp = cell2mat(I_hist(ii,:));
     tmpVar = zeros(length(t),1);
     for tk = 1:1:length(t)
-        %tmpVar(tk) = var(tmp(tk,:));
-        tmpVar(tk) = online_variance(tmp(tk,:));
+        tmpVar(tk) = var(tmp(tk,:));
+        %tmpVar(tk) = online_variance(tmp(tk,:));
     end
     Var{1,ii} = tmpVar;
     
@@ -175,7 +158,6 @@ if ffig == 1
     fig = figure();
     hold on;      % plot media e varianza
 
-    
     % grafico infetti PC
     
     % imposto latex come inteprete per i grafici
@@ -196,44 +178,41 @@ if ffig == 1
 
     % grafico con intervallo di confidenza
     
-    sm = sqrt(Varmedia);                % scarto quadratico medio
+    %sm = sqrt(Varmedia);                % scarto quadratico medio
     
-    p = 0.05;
-    CII = zeros(length(ii),2);
-    for idx = 1:length(ii)
-        x = ii(idx);
-        CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
-        CII(idx,:) = CIFcn(x,100-p*100); 
+    p = 0.05; CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+    CI95 = zeros(length(t),2);
+    tmp = cell2mat(I_hist(:)');
+    for kk = 1:length(t)
+        x = tmp(kk,:);
+        CII = CIFcn(x,100-p*100);
+        CI95(kk,:) = CII;
     end
 
-    %z_alpha1 = 1.96;                    % alpha = 0.05 (confidenza) --> liv conf 0.95
-    delta1 = CII.*sm/sqrt(M*B);     % giusto M*B?
-
-    p = 0.50;
-    CII = zeros(length(ii),2);
-    for idx = 1:length(ii)
-        x = ii(idx);
-        CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
-        CII(idx,:) = CIFcn(x,100-p*100); 
+    p = 0.50; CIFcn = @(x,p)prctile(x,abs([0,100]-(100-p)/2));
+    CI50 = zeros(length(t),2);
+    tmp = cell2mat(I_hist(:)');
+    for kk = 1:length(t)
+        x = tmp(kk,:);
+        CII = CIFcn(x,100-p*100);
+        CI50(kk,:) = CII;
     end
-    
-    %z_alpha3 = 0.67;                    % liv confidenza 0.50
-    delta3 = CII.*sm/sqrt(M*B);
 
 
-    H1 = plot(t, Imedio, 'Color', 'k', 'LineWidth', 2);
     hold on
-    H2 = plot(t, Imedio - delta1(:,1),...
-              t, Imedio + delta1(:,2),'Color', 'b');
-    H3 = plot(t, Imedio - delta3(:,1),...
-              t, Imedio + delta3(:,2),'Color', 'b');
+    H2 = plot(t, CI95(:,1),...
+              t, CI95(:,2),'Color', [.4 .5 .8],'Visible','Off');
+    H3 = plot(t, CI50(:,1),...
+              t, CI50(:,2),'Color', [.6 .8 1],'Visible','Off');
     tt = [t', fliplr(t')]';
-    hold on
-    yy = [H2(1).YData, fliplr(H2(2).YData)]'; h2 = fill(tt,yy,'b','facealpha',0.2);
-    yy = [H3(1).YData, fliplr(H3(2).YData)]'; h3 = fill(tt,yy,'cyan','facealpha',0.2);
-    legend([H1, H2(1),H3(1)], '$\mu$', '0.95\%','0.50\%','Location', 'Best');
+    yy = [H2(1).YData, fliplr(H2(2).YData)]'; fill(tt,yy,[.4 .5 .8],'facealpha',0.5);
+    yy = [H3(1).YData, fliplr(H3(2).YData)]'; fill(tt,yy,[.6 .8 1],'facealpha',0.5);
+    
     grid on
     box on
+    H1 = plot(t, Imedio, 'Color', 'k', 'LineWidth', 2);
+    legend([H1, H2(1),H3(1)], '$\mu$', '0.95\%','0.50\%','Location', 'Best');
+
 
     ax = gca;
     ax.XTick = 0:7:14;

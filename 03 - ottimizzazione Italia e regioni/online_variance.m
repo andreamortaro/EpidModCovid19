@@ -1,6 +1,8 @@
-% Algoritmo Welford per la varianza=sigma^2 (varianza interattiva)
-% scelto per evitare cancellazione catastrofica
 function variance = online_variance(data)
+
+% Algoritmo Welford per la varianza=sigma^2 (varianza interattiva).
+% Scelto per evitare cancellazione catastrofica.
+
 n     = 0;      % numero dati
 media = 0;
 M2    = 0;

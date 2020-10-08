@@ -1,5 +1,10 @@
 function [tL, ImedioL, VarmediaL,hist] = lockdownStat(data,I0f,R0f,hist,options)
 
+%
+%   lockdownStat simula il modello SIR M*B volte durante
+%   il periodo di lockdown e restituisce i valori ottenuti.
+%
+
 % recupero i valori che mi servono
 [Nass,Ibar,Rbar] = data.value;
 [~,~,t_u,t_c,~] = data.time;
@@ -10,14 +15,12 @@ Kfun = data(3).Kvalue;
 [beta_hist,gamma_hist] = hist.parameters;
 [I_old, R_old] = hist.sim;
 
-deltatc = 0;
+deltatc = 30;
 nstep = 2000;
-if isfield(options,'deltatc')
-    deltatc = options.deltatc;
-end
 
 % salvo simulazioni (con rk4 non è facile prevedere la dimensione)
 I_hist = cell(B,M); % per ogni riga beta,gamma fissato
+R_hist = cell(B,M); % per ogni riga beta,gamma fissato
 t_hist = cell(B,M);
 I_mean = cell(1,M); % valori medi, in ogni colonna ho un beta diverso
 
@@ -82,6 +85,7 @@ for ii = 1:B
         
         % salvo la simulazione
         I_hist{ii,jj} = x(:,2);   % lo salvo in colonna
+        R_hist{ii,jj} = x(:,3);   % lo salvo in colonna
         t_hist{ii,jj} = t;
         I_old{ii,jj} = [I_old{ii,jj}; x(2:end,2)];
         R_old{ii,jj} = [R_old{ii,jj}; x(2:end,3)];
@@ -112,12 +116,12 @@ Imedio = sum(tmp,2)./B;
 Var = cell(1,B);
 % per ogni beta fissato calcolo la varianza delle varie curve I(t)
 for ii = 1:B
-    % traiettorie per beta fissato
+    % M traiettorie per beta fissato
     tmp = cell2mat(I_hist(ii,:));
     tmpVar = zeros(length(t),1);
     for tk = 1:1:length(t)
-        %tmpVar(tk) = var(tmp(tk,:));
-        tmpVar(tk) = online_variance(tmp(tk,:));
+        tmpVar(tk) = var(tmp(tk,:))';
+        %tmpVar(tk) = online_variance(tmp(tk,:));
     end
     Var{1,ii} = tmpVar;
     
@@ -130,8 +134,8 @@ tmp = cell2mat(Var);
 Varmedia = sum(tmp,2)./B;
 
 % confronto tra calcolo e funzione built-in
-figure();
-% figure('Visible','off');
+%figure();
+figure('Visible','off');
 plot(t,Varmedia)
 xlabel('t')
 title('Varianza media')
@@ -147,7 +151,9 @@ VarmediaL = Varmedia(2:end);
 
 % ricostruisco le traiettorie
 for ii = 1:M
-hist(1).sim = I_old;
-hist(2).sim = R_old;
+hist(3).sim = I_hist;
+hist(4).sim = R_hist;
+hist(5).sim = I_old;
+hist(6).sim = R_old;
 
 end

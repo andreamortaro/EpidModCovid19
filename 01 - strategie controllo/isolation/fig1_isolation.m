@@ -1,4 +1,8 @@
-% Modello SIR
+%
+%   fig1_isolation simula il modello SIR con controllo mediante
+%   isolamento nel caso quattro differenti tempi di attivazione
+%   della strategia.
+%
 
 clc
 close all
@@ -129,13 +133,13 @@ for i =1:4
     xline(t1,':','attivazione','LineWidth',1.5);
     H = get(fig,'CurrentAxes'); set(H,'YTickLabel',{})
     if i == 1
-        set(H,'XTick',[t1,5,10,15,T],'XTickLabel',{'$\tau^{*}$','','','',''})
+        set(H,'XTick',[t1,5,10,15,T],'XTickLabel',{'$\tau^{*}$','','','','$t_{f}$'})
     elseif i == 2
-        set(H,'XTick',[0,t1,5,10,15,T],'XTickLabel',{'','$\tau^{*}$','','','',''})
+        set(H,'XTick',[0,t1,5,10,15,T],'XTickLabel',{'','$\tau^{*}$','','','','$t_{f}$'})
     elseif i == 3
-        set(H,'XTick',[0,t1,10,15,T],'XTickLabel',{'','$\tau^{*}$','','',''})
+        set(H,'XTick',[0,t1,10,15,T],'XTickLabel',{'','$\tau^{*}$','','','$t_{f}$'})
     elseif i == 4
-        set(H,'XTick',[0,5,t1,15,T],'XTickLabel',{'','','$\tau^{*}$','',''})
+        set(H,'XTick',[0,5,t1,15,T],'XTickLabel',{'','','$\tau^{*}$','','$t_{f}$'})
     end
     axis([0 T 0 N]);
     xlabel("t");

@@ -16,7 +16,7 @@ function [K,A] = stima_kcontinuo(data,K0_cont,ffig,ssave)
 %   A           : parametri stimati dall'ottimizzazione
 %
 
-global days K_disc t_u t_c regione
+global days K_disc t_u t_c regione ffit
 
 % recupero i valori che servono
 [~,~,t_u,t_c,date] = data.time;
@@ -27,14 +27,17 @@ if isfield(data,'regione')
     if regione == 'Lombardia'
         days = days(10:end);
         K_disc = K_disc(10:end);
+        ffit = 0;
     end
+else
+    ffit = data(1).ffit;
 end
 
 problem.options    = optimoptions('fmincon','Display','iter');
 problem.solver     = 'fmincon';
 problem.objective  = @minquad_kcontinuo;          % funzionale obiettivo minimizzare
 problem.x0         = K0_cont;                     % guess iniziale
-%problem.nonlcon    = @(A)mycon(A);               % vincolo non lineare su k (=beta>0)
+problem.nonlcon    = @(A)mycon(A);               % vincolo non lineare su k (=beta>0)
 
 % %prove
 % problem.OptimalityTolerance = 1e-12;
@@ -48,18 +51,24 @@ problem.x0         = K0_cont;                     % guess iniziale
 A = fmincon(problem);
 
 if isempty(regione) % nel caso italia in questa funzione regione = []
-    K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    switch ffit
+        case 0
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+        case 1
+            K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+    end
 else
     switch regione
         case "Veneto"
             K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<101)+A(1)*exp(-((101-A(2))/A(3)).^2).*(t>=101);
+            %K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
         case "Emilia-Romagna"
             K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<107)+A(1)*exp(-((107-A(2))/A(3)).^2).*(t>=107);
+            %K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);    
         otherwise
             K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
     end
 end
-
 
 if ffig == 1
     
@@ -116,24 +125,32 @@ end
 
 function [c,ceq] = mycon(A)
 
-global x0 beta gamma mu t_u t_c regione
+global x0 beta gamma mu t_u t_c regione ffit
 
-    %K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
-    K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
-    
+    if isempty(regione) % nel caso italia in questa funzione regione = []
+        switch ffit
+            case 0
+                K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+            case 1
+                K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+        end
+    else
+        %K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+        K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    end
     
     SEI = @(t,x) [-(beta - x(1)*x(3)/K(t))*x(1)*x(3);...
                    (beta - x(1)*x(3)/K(t))*x(1)*x(3) - mu*x(2);...
                     mu*x(2)- gamma*x(3)];
           
     Jac = @(t,x) [ -beta*x(3) + 2*x(1)*(x(3)^2)/K(t), 0, -beta*x(1) + 2*(x(1)^2)*x(3)/K(t);...
-                    beta*x(3) - 2*x(1)*(x(3)^2)/K(t), -mu,  beta*x(1) - 2*(x(1)^2)*x(3)/K(t) - gamma;...
+                    beta*x(3) - 2*x(1)*(x(3)^2)/K(t), -mu,  beta*x(1) - 2*(x(1)^2)*x(3)/K(t);...
                     0, mu,-gamma];
     options.Jacobian = Jac;    
     
     if isempty(regione) % nel caso italia in questa funzione regione = [] 
         nstep = 30;
-        tspan = linspace(t_u,50,nstep);
+        tspan = linspace(t_u,60,nstep);
     else
         switch regione
             case "Veneto"
@@ -148,8 +165,9 @@ global x0 beta gamma mu t_u t_c regione
         end
     end
     
-    [t, xm]  = eulerorosenbrock(SEI,tspan,x0,options);
-    
+%    [t, xm]  = eulerorosenbrock(SEI,tspan,x0,options);
+    [t, xm]  = ode15s(SEI,tspan,x0);
+
 	% Nonlinear inequality constraints (c(K)<=0)
     c = xm(:,1).*xm(:,3) - beta*K(t);   % deve essere <=0 (ATTENZIONE all'=)
     

@@ -55,7 +55,6 @@ xline(gamma/beta,':','\gamma/\beta','LineWidth',1,'FontSize',12,...
 % vectorfield(SIR,xval,yval,0,Nass)         % campo vettoriale (ridimensionato)
 % hold on
 
-
 for I0 = I0span
     
     % risoluzione sistema per fissato I0
@@ -77,52 +76,6 @@ set(gca,'FontSize',12.5);
 
 if ssave == 1
     exportgraphics(fig1,'figure/piano_fasi_SIR.pdf',...
-    'ContentType','vector',...
-    'BackgroundColor','none')
-end
-
-return
-
-%% figura SIR controllato
-
-
-nstep = 1000; tspan = linspace(0,tstar,nstep);  % SIR controllo
-
-fig2 = figure();
-
-set(groot,...
-    'defaulttextinterpreter','latex',...
-    'defaultAxesTickLabelInterpreter','latex',...
-    'defaultLegendInterpreter','latex');
-
-plot(0:1,1:-1:0,'SeriesIndex',2,'LineWidth',1.75)
-xlabel('S')
-ylabel('I')
-axis([0 1 0 1])
-axis('square')
-hold on
-
-for I0 = I0span
-    
-    % risoluzione sistema per fissato I0
-    S0 = Nass-I0;
-    x0=[S0;I0]./Nass;
-
-    % modello SIR controlalto
-    [t,x] = eulerorosenbrock(SIR_control,tspan,x0,options2);
-    %xsol = xsol.*Nass;
-    
-    %[Svec,Ivec] = meshgrid(1:5:Nass,1:5:Nass);
-    %S = 1:5:Nass; I = 1:5:Nass;
-    %vectorfield(SIR,S,I)                           % plot campo vettoriale
-    hold on
-    plot(x(:,1),x(:,2),'SeriesIndex',1,'LineWidth',1.5)  % piano delle fasi
-    drawnow
-    
-end
-
-if ssave == 1
-    exportgraphics(fig2,'figure/piano_fasi_SIR_control.pdf',...
     'ContentType','vector',...
     'BackgroundColor','none')
 end

@@ -1,21 +1,20 @@
+% Calcolo del tempo di eradicazione nel modello SIR
 
 clear all
 close all
 clc
 
 t0      = 0; tstar   = 20;
+N	= 1e5;
 
 gamma   = 4;
 R_0     = 3;
 beta    = R_0*gamma;
 k       = 1e-2;
 
-N	= 1e5;
-
 I0 = 1; S0 = N-I0;
 x0 = [S0;I0]/N;          % dato iniziale in percentuale
 tspan = linspace(t0,tstar,1500);
-
 
 SI = @(t,x) [-(beta - x(1)*x(2)/k)*x(1)*x(2);
               (beta - x(1)*x(2)/k)*x(1)*x(2) - gamma*x(2)];
@@ -41,7 +40,9 @@ if exist('index','var')
     xtickangle(-45)
 end
 
-title(['\epsilon = ' num2str(epss) ', T = ' num2str(t(index))])
+title(['$\epsilon$ = ' num2str(epss) ', T = ' num2str(t(index))])
 xlabel("t")
 axis tight
 grid on
+
+set(gca,'FontSize',12.5)

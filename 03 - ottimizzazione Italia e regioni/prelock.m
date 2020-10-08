@@ -3,9 +3,9 @@ function [t, x, beta, gamma] = prelock(data, K0, options)
 %
 %   [t, x, beta, gamma] = prelock(data, K0, options)
 %
-%   Lockdown è divisa in 3 parti: calcolo i k discreti, fitto i valori
-%   discreti per ottenere una funzione continua k(t) inserendo i parametri
-%   del fitting polinomiale nell'output A e simulo il modello aggiornato.
+%   la funzione prelock restituisce sia i valori di beta e gamma ottenuti
+%   mediante la risoluzione di un problema ai minimi quadrati, che la
+%   simulazione del modello SIR ottenuta con i parametri trovati.
 %
 %   INPUTS:
 %   data        : struttura che contiene i dati utili come Ibar e Rbar
@@ -58,17 +58,18 @@ end
 
 %% ottimizzazione per beta e gamma
 
+% Opzione per dividere le prime due settimane in due fasi, durante le quali
+% risolvere il problema ai minimi quadrati.
 switch prelockopt
-    case 0
+    case 0  % unico intervallo di due settimane,
+            % da fine febbraio fino a 9 Marzo, ovvero [t_0,t_u].
         
         data(1).prelock = t_0;  % tstart
         data(2).prelock = t_u;  % tfinal
         
         [~,~,beta,gamma] = stima_beta_gamma(data,K0,pnt);
-        % non conviene salvarsi la simulazione con tali beta e gamma, lo
-        % faccio sotto.
         
-    case 1 % divisa in due fasi nel periodo prelock
+    case 1 % due intervalli, ovvero [t_0,t_1] e [t_1,t_u].
         
         % primo intervallo [t_0,t_1]
 
@@ -105,9 +106,9 @@ Jac = @(t,x) [-beta*x(2), -beta*x(2);
 opt.Jacobian = Jac;
 opt.InitialStep = 0.01;
 I0 = Ibar(t_0+1); R0 = Rbar(t_0+1); S0 = Nass-I0-R0;
-x0 = [S0;I0]/Nass;                           % dato iniziale in percentuale
+x0 = [S0;I0]/Nass;                              % dato iniziale in percentuale
 
-[t, x]  = rk4(SI,[t_0,t_u],x0,opt);       % simulazione modello
+[t, x]  = rk4(SI,[t_0,t_u],x0,opt);             % simulazione modello
 
 x(:,3) = ones(length(t),1) - x(:,1) - x(:,2);   % ricavo R per post-processing
 x = Nass.*x;                                    % ri-normalizzo da percentuale a Nass
@@ -129,14 +130,14 @@ if ffig == 1
         'MarkerFaceColor',[1 .6 .6]);        
 
     hold on
-    p2 = plot(tm,Rbar(tm+1),'o',...
-        'MarkerSize',4,...
-        'MarkerEdgeColor',[.3 .4 .6],...
-        'MarkerFaceColor',[.3 .6 .8]);
+%     p2 = plot(tm,Rbar(tm+1),'o',...
+%         'MarkerSize',4,...
+%         'MarkerEdgeColor',[.3 .4 .6],...
+%         'MarkerFaceColor',[.3 .6 .8]);
     
     p3 = plot(t,x(:,2),'color','black','Linewidth',2.5); p3.Color(4) = 0.6;
     hold on
-    p4 = plot(t,x(:,3),'SeriesIndex',1,'Linewidth',2.5); p4.Color(4) = 0.6;
+%     p4 = plot(t,x(:,3),'SeriesIndex',1,'Linewidth',2.5); p4.Color(4) = 0.6;
     
     if prelockopt == 1
         p5 = plot(t1,x1(:,2),'SeriesIndex',4,'Linewidth',2.5); p5.Color(4) = 0.6;

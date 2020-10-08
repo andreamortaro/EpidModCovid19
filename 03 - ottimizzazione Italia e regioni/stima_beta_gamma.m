@@ -1,30 +1,14 @@
 function [t,x,beta,gamma] = stima_beta_gamma(data,K0,pnt)
 
 %
-%   [t, x, beta, gamma] = prelock(data, K0, options)
-%
 %   Stima di beta e gamma nell'intervallo [data(1).prelock,data(2).prelock]
 %   e simulazione del modello
-%
-%   INPUTS:
-%   data        : struttura che contiene i dati utili come Ibar e Rbar.
-%                 Contiene data.prelock che sono gli estremi
-%                 dell'intervallo temporale durante il quale risolvo il problema.
-%   K0          : guess ottimizzazione per trovare beta-gamma.
-%
-%   OUTPUTS:
-%   t           : tempi soluzione del modello simulato
-%   x           : soluzione modello simulato
-%   beta        : parametro del SIR ottenuto dall'ottimizzazione
-%   gamma       : parametro del SIR ottenuto dall'ottimizzazione
 %
 
 global tstart tfinal date Ibar Rbar Nass x0 tm ym tspan pnt  %#ok<REDEFGI>
 
 % recupero i valori che servono
-
 [tstart,tfinal] = data.prelock;
-
 [Nass,Ibar,Rbar] = data.value;
 date = data(5).time;
 

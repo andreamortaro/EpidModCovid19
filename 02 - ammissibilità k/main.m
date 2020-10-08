@@ -1,4 +1,7 @@
 %% Funziona su Octave. Non provato su Matlab.
+%
+%   analisi sull'ammissibilità del parametro k.
+%
 
 clc
 clear all

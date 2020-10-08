@@ -7,20 +7,6 @@ function [days, K_disc]=stima_kdiscreti(data,kspan,window,K0_disc,pnt)
 %   descritti nella struttura window, e ricavo il valore del parametro di controllo k.
 %   Trovo un k per ogni punto (=giorno) di kspan.
 %
-%   INPUTS:
-%   data        : struttura contenente i dati utili
-%   kspan       : Intervallo temporale considerato.
-%   window      : struttura che contiene i seguenti campi:
-%                 - window.kl: estremo sinistro finestra integrazione rispetto t_i
-%                 - window.kr: estremo destro finestra integrazione rispetto t_i
-%                 - window.k0: guess iniziale
-%   K0_disc     : guess iniziale
-%
-%   OUTPUTS:
-%   days        : il giorno days(i) corrisponde al K_disc(i) parametro trovato
-%   K_disc      : parametri discreti trovati per ogni punto di kpsan
-%
-%
 
 global t_u t_c tl tr tm tspan ym Nass Ibar Rbar beta gamma x0 pnt  %#ok<REDEFGI>
 

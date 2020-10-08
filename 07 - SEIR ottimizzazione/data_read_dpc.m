@@ -3,17 +3,19 @@ function [date,Ebar,Ibar,Rbar,totCases] = data_read_dpc(path_folder)
 %
 %   [date,Ibar,Rbar] = data_read_dpc(path_folder)
 %
-%   data_read_dpc legge i dati della protezione civile italiana
+%   data_read_dpc legge i dati della Protezione Civile.
 %
 %   INPUTS:
 %   path_folder : percorso folder dove ci sono i csv
 %
 %   OUTPUTS:
 %   date        : vettore stringhe delle date presenti nei csv
-%   Ibar        : totale casi positivi, I(t) secondo il SEIR
-%   Ebar        : totale casi positivi, E(t) secondo il SEIR
-%   Rbar        : totale rimossi, R(t) secondo il SEIR
+%   Ebar        : casi in isolamento domiciliare giornalieri nei dati della P.C., I nel SIR
+%   Ibar        : totale ospedalizzati giornalieri nei dati della P.C., I nel SIR
+%   Rbar        : somma deceduti e guariti giornalieri nei dati della P.C., R nel SIR
+%   totCases    : totale casi positivi nei dati della P.C., I+R nel SIR
 %
+
 
 %[status,result] = fileattrib('dati-andamento-nazionale');
 %path_folder = result.Name;         % percorso alla cartella

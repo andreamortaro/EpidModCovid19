@@ -25,6 +25,9 @@ options.Jacobian = Jac;
 
 % la sol dipende da K
 [t, xm]  = eulerorosenbrock(SEI,tspan,x0,options);
+%options = odeset('Jacobian',Jac);
+%[t, xm]  = ode23s(SEI,tspan,x0,options);
+
 
 if tm' ~= t(pnt*(tm-tl)+1)
     warning("stai minimizzando nei punti sbagliati")
@@ -34,23 +37,18 @@ xm(:,4) = ones(length(t),1) - xm(:,1) - xm(:,2) - xm(:,3);	% ricavo R per post-p
 xm = Nass.*xm;                                      % ri-normalizzo da percentuale a Nass
 
 % Calcolo numericamente la funzione dei minimi quadrati L
-phi = 0.5;
-psi = 0.3;
+phi = 0.6;
+psi = 0.25;
 nu = 1-phi-psi;
 n = 2;
-deltat = tr-tl;
 tt = pnt*(tm-tl)+1;          % tempi soluzione (calcolata con diverso nstep da tm, piu punti)
 
 L = 0;
 for jj = 2:length(tm)
-    L = L+(phi*(ym(jj,1)-xm(tt(jj),2)).^n +...
-           psi*(ym(jj,2)-xm(tt(jj),3)).^n +...
+    L = L+(phi*(ym(jj,1)+ym(jj,2)-xm(tt(jj),2)-xm(tt(jj),3)).^n + ...
+            psi*(ym(jj,1)-xm(tt(jj),2)).^n + ...
             nu*(ym(jj,3)-xm(tt(jj),4)).^n);  % misura minimi quadrati
 end
-
-% NOTA:
-% aggiustamento, pnt*(tm(j)-t_0)+1 per beccare la soluzione nel posto giusto
-% tspan(pnt*(tm(j)-t_0)+1) = tm e t(pnt*(tm-t_0)+1) = tm come volevo
 
 %L = L/Nass;
 

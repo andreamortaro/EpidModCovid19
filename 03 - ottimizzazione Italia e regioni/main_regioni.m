@@ -8,8 +8,8 @@ close all
 clc
 
 % controllo blocchi codice: posso fermare lockdown e riepilogo
-lock = 0;
-riep = 0;
+lock = 1;
+riep = 1;
 stat = 0;
 
 % Upload dati protezione civile
@@ -120,7 +120,6 @@ K0_cont = [a,b,c];                  % guess iniziale
 
 % 3. Simulazione modello oltre il lockdown
 options.nstep = 1000;
-options.deltatc = 10;
 
 % trovo i k_c discreti nell'intervallo [t_u, t_c]
 % mi salvo i K_disc per capire il fitting da fare

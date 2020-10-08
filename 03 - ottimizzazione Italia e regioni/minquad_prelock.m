@@ -32,7 +32,7 @@ xm(:,3) = ones(length(t),1) - xm(:,1) - xm(:,2);        % ricavo R per post-proc
 xm = Nass.*xm;                                          % ri-normalizzo da percentuale a Nass
 
 % Calcolo numericamente la funzione dei minimi quadrati L
-phi = 0.98;
+phi = 0.985;
 psi = 1-phi;
 n = 2;
 deltat = tfinal-tstart;
@@ -42,7 +42,7 @@ L = 0;
 for jj = 2:length(tm)
     c = 100;
     t0 = 9;    % tempo inizio
-    pot = 1-1./(1+exp(c*(tm(jj)-t0)));
+    pot = 1./(1+exp(-c*(tm(jj)-t0)));
     A = 100;
     pot = A*pot;
     %pot = 1;
@@ -50,9 +50,10 @@ for jj = 2:length(tm)
            psi*pot*(ym(jj,2)-xm(tt(jj),3)).^n);  % misura minimi quadrati
 end
 
-mu = 0.1;
-%L = L/Nass + mu*(1*K(1)^2 + 0*K(2)^2);
+%mu = 0.001;
+%L = L/Nass + mu*(1*K(1)^2 + 1*K(2)^2);
 
+mu = 0.001;
 L = L/Nass + mu*(K(1)^0.5);
 
 

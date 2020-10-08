@@ -1,5 +1,10 @@
 function riepilogo(data,tt,ii,ee,options)
 
+%
+%   la funzione riepilogo stampa l'intera simulazione prelock-lockdown del
+%   nostro modello k-SIR.
+%
+
 [t_0,~,t_u,t_c,date] = data.time;
 [~,Ibar,~,~,Ebar] = data.value;
 [days,K_disc,Kfun] = data.Kvalue;
@@ -22,13 +27,13 @@ set(groot,...
     'defaultAxesTickLabelInterpreter','latex',...
     'defaultLegendInterpreter','latex');
 
-p1 = plot(t_0:t_c,Ibar,'o',...
+p1 = plot(t_0:t_c,Ibar((t_0:t_c)+1)+Ebar((t_0:t_c)+1),'o',...
     'MarkerSize',4,...
     'MarkerEdgeColor','red',...
     'MarkerFaceColor',[1 .6 .6]);
 
 hold on
-p2 = plot(tt,ii,'Linewidth',2.5,'color','black'); p2.Color(4) = 0.6;
+p2 = plot(tt,ii+ee,'Linewidth',2.5,'color','black'); p2.Color(4) = 0.6;
 
 % p3 = plot(t_0:t_c,Ebar,'o',...
 %     'MarkerSize',4,...
@@ -37,14 +42,21 @@ p2 = plot(tt,ii,'Linewidth',2.5,'color','black'); p2.Color(4) = 0.6;
 % p4 = plot(tt,ee,'Linewidth',2.5,'color','green'); p3.Color(4) = 0.6;
 
 ax = gca;
-ax.XTick = [t_u,37,67,98,t_c];
-ax.XTickLabel = date([t_u,37,67,98,t_c]+1);
+if t_u > 14
+    xline(14,':','inizio lockdown')
+    xline(t_u,':','attivazione controllo')
+    ax.XTick = [14,t_u,37,67,98,t_c];
+    ax.XTickLabel = date([14,t_u,37,67,98,t_c]+1);
+else % t_u = 9
+    xline(t_u,':','inizio Lockdown')
+    ax.XTick = [t_u,37,67,98,t_c];
+    ax.XTickLabel = date([t_u,37,67,98,t_c]+1);
+end
 ax.XTickLabelRotation = 45;
-xline(t_u,':','inizio Lockdown')
+
 %ylim([0 3e5])
 
 box on
-% legend([p1,p2,p3,p4],'$I_{bar}$','I','$E_{bar}$','E','Location','Northeast');
 ylabel('casi attuali confermati');
 
 if exist('regione','var') == 1

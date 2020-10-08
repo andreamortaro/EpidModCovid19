@@ -1,5 +1,10 @@
 function riepilogo(data,tt,ii,options)
 
+%
+%   la funzione riepilogo stampa l'intera simulazione prelock-lockdown del
+%   nostro modello k-SIR.
+%
+
 [t_0,~,t_u,t_c,date] = data.time;
 [~,Ibar,~] = data.value;
 [days,K_disc,Kfun] = data.Kvalue;

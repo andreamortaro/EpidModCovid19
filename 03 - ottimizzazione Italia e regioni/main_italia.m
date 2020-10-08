@@ -10,7 +10,7 @@ clc
 % controllo blocchi codice: posso fermare lockdown e riepilogo
 lock = 1;
 riep = 1;
-stat = 1;
+stat = 0;
 
 %% DATI
 
@@ -56,6 +56,7 @@ options.prelockopt = 0; % minimizzazione in Feb 24 fino a Mar 9
 
 options.pnt   = 5;      % piu nodi per migliore risoluzione sistema minquad
 K0  = [0.3088,0.0495];        % guess iniziale ottimizzazione per [beta,gamma]
+%K0 = [0.95,0.10];
 
 [tpl, xpl, beta, gamma] = prelock(data, K0, options);
 
@@ -84,13 +85,19 @@ K0_disc	= 1e-5;         % guess iniziale
 options.pnt	= 100;      % aumento numero nodi integrazione
 
 % 2. Fitto i k discreti ottenuti e ricavo k(t)
-a = 0.006; b = 52; c = 40; % guassiana
-%a = 1; b = 0.05; c = 0.01;    % exp^3
-K0_cont = [a,b,c];                  % guess iniziale
+options.ffit = 1;       % 0 gaussiana, 1 esponenziale
+
+switch options.ffit
+    case 0
+        a = 0.006; b = 52; c = 40;      % guassiana
+    case 1
+       a = 1; b = 0.05; c = 0.01;       % exp^3
+end
+
+K0_cont = [a,b,c];                      % guess iniziale
 
 % 3. Simulazione modello oltre il lockdown
 options.nstep = 1000;
-options.deltatc = 30;
 
 % simulazione modello durante lockdown e fitting dei k discreti
 [tl,xl,days,K_disc,A,Kfun] = lockdown(data, K0_disc, K0_cont, options);
@@ -113,6 +120,9 @@ tt = [tpl;tl]'; ii = [xpl(:,2);xl(:,2)]';
 
 riepilogo(data,tt,ii,options);
 
+data(1).infSim = [tpl, xpl(:,2)];
+data(2).infSim = [tl, xl(:,2)];
+
 if stat == 0
     return
 else
@@ -120,8 +130,5 @@ else
 end
 
 %% statistica
-
-data(1).infSim = [tpl, xpl(:,2)];
-data(2).infSim = [tl, xl(:,2)];
 
 statistica(data)

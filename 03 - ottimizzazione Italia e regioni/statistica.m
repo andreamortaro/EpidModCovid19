@@ -1,14 +1,20 @@
-% Modelli monte carlo?
 function statistica(data)
 
+%
+%   statistica(data) utilizza la tecnica Monte-Carlo per calcolare
+%   le bande di confidenza e stampa a video i casi positivi attesi e
+%   casi totali attesi.
+%
+
 % parametri modello
-alfab = 0;
+alfab = 0.05;
 alfag = 0;
 
 %p = 40;         % percentuale infetti che aggiungo
-c = 8.56;
+%c = 8.56;
+c = 10.47;
 p = 2*(c-1);
-M = 30;        % numero simulazioni con dato valore infetti iniziali misurato
+M = 20;        % numero simulazioni con dato valore infetti iniziali misurato
 B = 10;          % numero simulazioni con dato beta e gamma
 
 data(1).parametersStat = alfab;
@@ -36,10 +42,11 @@ ssave = 1;
 
 options.ffig = ffig;
 options.ssave = ssave;
-options.deltatc = 10;
 
 [tL, ImedioL, VarmediaL,hist] = lockdownStat(data,I0f,R0f,hist,options);
 % hist.sim: sulle righe della cell variano i beta e gamma
+
+hist(1).parameters./hist(2).parameters
 
 %% riepilogo
 
@@ -52,9 +59,6 @@ options.ssave = ssave;
 tt = [tPL;tL]; ii = [ImedioPL;ImedioL]; vv = [VarmediaPL;VarmediaL];
 
 riepilogoStat(data,tt,ii,vv,hist,options)
-
-return
-
 
 
 end

@@ -12,11 +12,20 @@ function L = minquad_kcontinuo(A)     % funzionale da minimizzare
 %   L       : funzione minimi quadrati
 %
 
-global days K_disc Nass
+global days K_disc regione ffit
 
-K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
-% K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
-
+if isempty(regione) % nel caso italia in questa funzione regione = []
+    switch ffit
+        case 0
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+        case 1
+            K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+    end
+else
+    %K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+    K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+end
+    
 % Calcolo numericamente la funzione dei minimi quadrati L
 n = 2;
 L = 0;

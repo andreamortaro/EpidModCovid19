@@ -1,22 +1,10 @@
 function [K,A] = stima_kcontinuo(data,K0_cont,ffig,ssave)
 
 %
-%   [K,A] = stima_kcontinuo(data,K0_cont,ffig,ssave)
-%
-%   Fitto i parametri K_disc che si trovano in data.
-%
-%   INPUTS:
-%   data        : struttura contenente i dati utili
-%   K0_cont     : guess iniziale
-%   ffig        : flag sulla stampa della figura
-%   ssave       : flag print della figura
-%
-%   OUTPUTS:
-%   K           : funzione risultante dall'ottimizzazione, fitta i K_disc
-%   A           : parametri stimati dall'ottimizzazione
+%   Stima di k continuo nell'intervallo [t_u,t_c] e simulazione del modello
 %
 
-global days K_disc Nass t_u t_c regione
+global days K_disc Nass t_u t_c regione ffit
 
 % recupero i valori che servono
 Nass = data(1).value;
@@ -28,7 +16,10 @@ if isfield(data,'regione')
     if regione == 'Lombardia'
         days = days(10:end);
         K_disc = K_disc(10:end);
+        ffit = 0;
     end
+else
+    ffit = data(1).ffit;
 end
 
 
@@ -51,13 +42,20 @@ problem.MaxIterations = 500;
 A = fmincon(problem);
 
 if isempty(regione) % nel caso italia in questa funzione regione = []
-    K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    switch ffit
+        case 0
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+        case 1
+            K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+    end
 else
     switch regione
         case "Veneto"
-            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<101)+A(1)*exp(-((101-A(2))/A(3)).^2).*(t>=101);
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<104)+A(1)*exp(-((104-A(2))/A(3)).^2).*(t>=104);
+            %K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
         case "Emilia-Romagna"
-            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<107)+A(1)*exp(-((107-A(2))/A(3)).^2).*(t>=107);
+            K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2).*(t<105)+A(1)*exp(-((105-A(2))/A(3)).^2).*(t>=105);
+            %K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);    
         otherwise
             K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
     end
@@ -132,10 +130,19 @@ end
 
 function [c,ceq] = mycon(A)
 
-global x0 beta gamma t_u t_c regione
+global x0 beta gamma t_u t_c regione ffit
 
-    %K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
-    K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    if isempty(regione) % nel caso italia in questa funzione regione = []
+        switch ffit
+            case 0
+                K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+            case 1
+                K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+        end
+    else
+        %K = @(t) A(1)*exp(-A(2)*t).*(1-exp(-A(3)*t)).^3;
+        K = @(t) A(1)*exp(-((t-A(2))/A(3)).^2);
+    end
     
     
     SI = @(t,x) [-(beta - x(1)*x(2)/K(t))*x(1)*x(2);
@@ -152,10 +159,10 @@ global x0 beta gamma t_u t_c regione
         switch regione
             case "Veneto"
                 nstep = 30;
-                tspan = linspace(t_u,50,nstep);
+                tspan = linspace(t_u,60,nstep);
             case "Emilia-Romagna"
                 nstep = 50;
-                tspan = linspace(t_u,60,nstep);
+                tspan = linspace(t_u,50,nstep);
             otherwise
                 nstep = 500;
                 tspan = linspace(t_u,110,nstep);
